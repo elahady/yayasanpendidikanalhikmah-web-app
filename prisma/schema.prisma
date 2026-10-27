@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Jenjang {
+  ULA
+  WUSTHO
+}
+
+enum JilidNahdliyah {
+  PRA_NAHDLIYAH
+  JILID_1
+  JILID_2
+  JILID_3
+  JILID_4
+  JILID_5
+  JILID_6
+  AL_QURAN
+}
+
+model TU {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model Santri {
+  id                   String          @id @default(cuid())
+  nama                 String
+  jenjang              Jenjang
+  kelas                String
+  jilidSaatIni         JilidNahdliyah  @default(PRA_NAHDLIYAH)
+  catatanProgressMadin String?         @db.Text
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  absensi              AbsensiSantri[]
+}
+
+model Ustadz {
+  id          String          @id @default(cuid())
+  nama        String
+  mapelDiajar String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  absensi     AbsensiUstadz[]
+}
+
+model AbsensiSantri {
+  id         String   @id @default(cuid())
+  santriId   String
+  santri     Santri   @relation(fields: [santriId], references: [id], onDelete: Cascade)
+  tanggal    DateTime @db.Date
+  hadir      Boolean
+  keterangan String?
+  createdAt  DateTime @default(now())
+
+  @@unique([santriId, tanggal])
+}
+
+model AbsensiUstadz {
+  id         String   @id @default(cuid())
+  ustadzId   String
+  ustadz     Ustadz   @relation(fields: [ustadzId], references: [id], onDelete: Cascade)
+  tanggal    DateTime @db.Date
+  hadir      Boolean
+  keterangan String?
+  createdAt  DateTime @default(now())
+
+  @@unique([ustadzId, tanggal])
+}
