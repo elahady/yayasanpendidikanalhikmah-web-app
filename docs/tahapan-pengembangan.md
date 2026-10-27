@@ -4,16 +4,16 @@ Memetakan hasil riset (lihat repo [yayasanpendidikanalhikmah](https://github.com
 
 ## Ringkasan
 
-| Tahap | Fokus | Output Utama |
-|---|---|---|
-| 0 | Setup Project | Scaffold Next.js + Prisma + koneksi `shared-mysql` + NextAuth (1 akun TU), routing publik vs `/admin`, belum ada konten |
-| 1 | Halaman Publik: Kurikulum TPQ (An-Nahdhiyah) | Konten statis: asal metode, ciri ketukan+klasikal, tabel 6 jilid. Menentukan field `jilid_saat_ini` (8 pilihan) untuk Tahap 5 |
-| 2 | Halaman Publik: Kurikulum Madrasah Diniyah | Konten statis: jenjang Ula (6 thn)/Wustho (3 thn), tabel mapel per jenjang, jadwal (placeholder), daftar pengajar (tarik dari Tahap 4) |
-| 3 | Halaman Publik: Struktur Organisasi & Tentang | Konten statis dari `proposal-donatur.md` (profil, visi-misi, daftar pengurus) |
-| 4 | Admin: Login TU + Master Data | Login TU, CRUD data Santri (nama, jenjang, kelas) dan Ustadz/Ustadzah (nama, mapel) — prasyarat Tahap 5 |
-| 5 | Admin: Absensi & Progress | Form absensi harian santri & ustadz (mobile-first), update progress santri (`jilid_saat_ini` utk TPQ, catatan bebas utk Madin), statistik ringkas opsional ke halaman publik |
-| 6 | Deploy | Docker container di VPS `103.54.170.198`, akses dev via IP:port, domain menyusul |
-| *Ditunda* | Donasi, Legalitas, Galeri | Sengaja tidak masuk versi awal (keputusan 2026-10-27) |
+| Tahap | Status | Fokus | Output Utama |
+|---|---|---|---|
+| 0 | ✅ Selesai (2026-10-27) | Setup Project | Next.js 16 + Prisma 6.19.3 + NextAuth, skema lengkap, skeleton semua rute publik & admin |
+| 1-3 | ✅ Selesai (2026-10-27) | Halaman Publik | Kurikulum TPQ (An-Nahdhiyah), Kurikulum Madrasah Diniyah, Struktur Organisasi, Tentang, Beranda — konten dari riset, placeholder jelas untuk data yang belum final (nama pengurus, jadwal, pengajar) |
+| 4 | ✅ Selesai (2026-10-27) | Admin: Master Data | CRUD Santri (nama, jenjang, kelas) dan Ustadz/Ustadzah (nama, mapel) via Server Actions, mobile-first |
+| 5 | ✅ Selesai (2026-10-27) | Admin: Absensi & Progress | Form absensi harian santri & ustadz (mobile-first, default hadir, bisa dikoreksi), update progress santri (jilid An-Nahdhiyah + catatan Madin), ringkasan distribusi jilid |
+| 6 | ⏳ Belum — butuh konfirmasi sebelum eksekusi ke VPS nyata | Deploy | Docker container di VPS `103.54.170.198`, akses dev via IP:port, domain menyusul |
+| *Ditunda* | — | Donasi, Legalitas, Galeri | Sengaja tidak masuk versi awal (keputusan 2026-10-27) |
+
+Tahap 0-5 dikerjakan 2026-10-27: Tahap 0 manual, Tahap 1-3/4/5 lewat 3 agent paralel (git worktree terisolasi) lalu di-merge ke `main`. Build (`npm run build`) dan lint (`npm run lint`) lolos bersih di hasil gabungan. **Belum pernah dites end-to-end dengan database MySQL nyata** (tidak ada akses ke `shared-mysql` VPS dari environment pengembangan ini) — perlu tes manual (isi `.env`, `prisma migrate dev`, `npx tsx prisma/seed.ts`, coba login & CRUD beneran) begitu ada akses DB, idealnya sebelum atau sesaat setelah Tahap 6.
 
 Detail tiap tahap ada di bawah.
 
