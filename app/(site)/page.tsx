@@ -77,10 +77,10 @@ export default function HomePage() {
           <span className="rounded-full border border-white/25 px-3.5 py-1.5 text-[13px] font-semibold tracking-wide text-[#F0CDA8]">
             TPQ &amp; Madrasah Diniyah
           </span>
-          <h1 className="font-display text-[42px] font-semibold leading-[1.12] text-bg sm:text-5xl">
+          <h1 className="font-display text-[42px] font-semibold leading-[1.12] text-hero-ink sm:text-5xl">
             Mendidik Generasi Qur&apos;ani, Satu Bacaan Setiap Hari
           </h1>
-          <p className="max-w-lg text-[17px] leading-relaxed text-bg/80">
+          <p className="max-w-lg text-[17px] leading-relaxed text-hero-ink/80">
             Yayasan Pendidikan Al-Hikmah mengelola TPQ dengan metode An-Nahdhiyah dan Madrasah Diniyah
             berjenjang, untuk anak usia SD hingga SMP.
           </p>
@@ -93,7 +93,7 @@ export default function HomePage() {
             </Link>
             <Link
               href="/kurikulum-diniyah"
-              className="rounded-xl border border-white/35 px-6 py-3.5 text-[15px] font-semibold text-bg transition hover:bg-white/10"
+              className="rounded-xl border border-white/35 px-6 py-3.5 text-[15px] font-semibold text-hero-ink transition hover:bg-white/10"
             >
               Kurikulum Diniyah
             </Link>

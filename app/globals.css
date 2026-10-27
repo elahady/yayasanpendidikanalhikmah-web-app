@@ -7,6 +7,11 @@
   --color-bg-elevated: #ffffff;
   --color-bg-muted: #f3edde;
   --color-hero: #2a3424;
+  /* Khusus teks di atas section hero (--color-hero) — hero itu selalu gelap di
+     kedua tema (cuma beda shade), jadi warna tulisannya TIDAK ikut berubah
+     seperti --color-bg (yang jadi gelap juga di dark mode dan bikin
+     teks-di-atas-hero jadi gelap-di-atas-gelap/nyaris tak kelihatan). */
+  --color-hero-ink: #faf6ec;
   --color-ink: #231e19;
   --color-ink-muted: #5b5349;
   --color-ink-subtle: #8a8276;
