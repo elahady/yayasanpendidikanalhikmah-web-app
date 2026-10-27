@@ -1,0 +1,24 @@
+# Nama project wajib eksplisit (lihat catatan serupa di ~/apps/rizqflow/server/docker-compose.yml
+# di VPS) — tanpa ini Docker memakai nama folder, berisiko bentrok dengan app lain.
+name: yayasanpendidikanalhikmah-web-app
+
+services:
+  app:
+    build: .
+    image: yayasanpendidikanalhikmah-web-app:latest
+    container_name: tpq-alhikmah-web
+    # 0.0.0.0 (bukan 127.0.0.1) — diakses langsung lewat IP:port selama belum ada domain,
+    # beda dari pola rizqflow yang sengaja hanya lewat nginx. Pindah ke 127.0.0.1 + nginx
+    # begitu domain terpisah sudah ada (lihat docs/tahapan-pengembangan.md Tahap 6).
+    ports:
+      - "8083:3000"
+    env_file:
+      - .env.production
+    networks:
+      - default
+      - shared-db
+    restart: unless-stopped
+
+networks:
+  shared-db:
+    external: true
