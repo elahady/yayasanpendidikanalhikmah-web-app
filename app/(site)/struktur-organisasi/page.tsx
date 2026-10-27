@@ -1,6 +1,13 @@
-import { Callout } from "../_components/Callout";
-
-const posisi = ["Ketua", "Sekretaris", "Bendahara", "Kepala TPQ", "Kepala Madrasah Diniyah"];
+const pengurus = [
+  { jabatan: "Direktur", nama: "H. Tri Joko Mulyoto, S.Pd." },
+  { jabatan: "Sekretaris 1", nama: "H.M. Roziq Rizal Al Ahadi, ST" },
+  { jabatan: "Sekretaris 2", nama: "Donny Marjadi, S.Pd." },
+  { jabatan: "Bendahara", nama: "H. Kholil, S.Pd." },
+  { jabatan: "Anggota", nama: "H. Sutarsono, S.Pd." },
+  { jabatan: "Kepala TPQ", nama: "Siti Aminah, S.Pd." },
+  { jabatan: "Kepala TU", nama: "Donny Marjadi, S.Pd." },
+  { jabatan: "Kepala Madrasah Diniyah", nama: "H.M. Roziq Rizal Al Ahadi, ST" },
+];
 
 export default function StrukturOrganisasiPage() {
   return (
@@ -13,16 +20,9 @@ export default function StrukturOrganisasiPage() {
         </p>
       </div>
 
-      <Callout variant="placeholder">
-        <p>
-          Data pengurus (nama, kontak) belum final di dokumen internal yayasan. Halaman ini menampilkan kerangka
-          posisi yang akan diisi setelah data disetujui.
-        </p>
-      </Callout>
-
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {posisi.map((label) => (
-          <div key={label} className="flex items-center gap-4 rounded-2xl border border-border bg-bg-elevated p-5">
+        {pengurus.map(({ jabatan, nama }) => (
+          <div key={jabatan} className="flex items-center gap-4 rounded-2xl border border-border bg-bg-elevated p-5">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-bg-muted text-primary">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <circle cx="12" cy="8" r="3.4"></circle>
@@ -30,8 +30,8 @@ export default function StrukturOrganisasiPage() {
               </svg>
             </div>
             <div>
-              <p className="font-semibold text-ink">{label}</p>
-              <p className="mt-0.5 text-sm text-ink-subtle">Nama {label} — [belum diisi]</p>
+              <p className="font-semibold text-ink">{jabatan}</p>
+              <p className="mt-0.5 text-sm text-ink-subtle">{nama}</p>
             </div>
           </div>
         ))}
