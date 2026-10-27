@@ -63,24 +63,19 @@ const mapelWustho: Mapel[] = [
 
 function TabelMapel({ data }: { data: Mapel[] }) {
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto rounded-2xl border border-border bg-bg-elevated">
       <table className="w-full border-collapse text-sm">
         <thead>
-          <tr className="border-b border-black/10 text-left dark:border-white/10">
-            <th className="py-2 pr-4 font-semibold">Mata Pelajaran</th>
-            <th className="py-2 font-semibold">Fokus</th>
+          <tr className="border-b border-border text-left">
+            <th className="py-3 pl-5 pr-4 font-semibold text-ink">Mata Pelajaran</th>
+            <th className="py-3 pr-5 font-semibold text-ink">Fokus</th>
           </tr>
         </thead>
         <tbody>
           {data.map((row) => (
-            <tr
-              key={row.nama}
-              className="border-b border-black/5 align-top dark:border-white/5"
-            >
-              <td className="py-2 pr-4 whitespace-nowrap font-medium">
-                {row.nama}
-              </td>
-              <td className="py-2">{row.deskripsi}</td>
+            <tr key={row.nama} className="border-b border-border align-top last:border-b-0">
+              <td className="py-3 pl-5 pr-4 whitespace-nowrap font-medium text-ink">{row.nama}</td>
+              <td className="py-3 pr-5 text-ink-muted">{row.deskripsi}</td>
             </tr>
           ))}
         </tbody>
@@ -91,27 +86,24 @@ function TabelMapel({ data }: { data: Mapel[] }) {
 
 export default function KurikulumDiniyahPage() {
   return (
-    <div className="space-y-10">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-semibold">Kurikulum Madrasah Diniyah</h1>
-        <p className="text-zinc-600 dark:text-zinc-400">
-          Madrasah Diniyah di Yayasan Pendidikan Al-Hikmah terbagi menjadi dua
-          jenjang: <strong>Ula</strong> (setara SD) dan <strong>Wustho</strong>{" "}
+    <div className="mx-auto max-w-5xl space-y-14 px-6 pb-20 pt-4">
+      <div className="space-y-3">
+        <span className="text-[13px] font-bold uppercase tracking-widest text-link">Kurikulum Madrasah Diniyah</span>
+        <h1 className="font-display text-[40px] font-semibold text-ink">Jenjang Ula &amp; Wustho</h1>
+        <p className="max-w-2xl text-[16px] leading-relaxed text-ink-muted">
+          Madrasah Diniyah di Yayasan Pendidikan Al-Hikmah terbagi menjadi dua jenjang:{" "}
+          <strong className="text-ink">Ula</strong> (setara SD) dan <strong className="text-ink">Wustho</strong>{" "}
           (setara SMP).
         </p>
       </div>
 
       <Section title="Jenjang & Masa Belajar">
         <p>
-          Berdasarkan acuan resmi PMA No. 13 Tahun 2014 (Kementerian Agama
-          RI), masa belajar jenjang Ula adalah 6 tahun dan jenjang Wustho
-          adalah 3 tahun.
+          Berdasarkan acuan resmi PMA No. 13 Tahun 2014 (Kementerian Agama RI), masa belajar jenjang Ula adalah
+          6 tahun dan jenjang Wustho adalah 3 tahun.
         </p>
         <Callout variant="catatan">
-          <p>
-            Yayasan dapat memilih untuk memadatkan durasi ini menyesuaikan
-            kapasitas riil TPQ — keputusan ini belum final.
-          </p>
+          <p>Yayasan dapat memilih untuk memadatkan durasi ini menyesuaikan kapasitas riil TPQ — keputusan ini belum final.</p>
         </Callout>
       </Section>
 

@@ -8,9 +8,9 @@ export function Section({
   children: ReactNode;
 }) {
   return (
-    <section className="space-y-3">
-      <h2 className="text-xl font-semibold">{title}</h2>
-      <div className="space-y-3 text-zinc-700 dark:text-zinc-300">{children}</div>
+    <section className="space-y-4">
+      <h2 className="font-display text-2xl font-semibold text-ink">{title}</h2>
+      <div className="space-y-3 text-[15px] leading-relaxed text-ink-muted">{children}</div>
     </section>
   );
 }
