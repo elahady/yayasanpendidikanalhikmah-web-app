@@ -28,6 +28,14 @@ Dokumen konsep (kurikulum, proposal donatur) ada di repo terpisah: [yayasanpendi
 
 **Live di** `http://103.54.170.198:8083` (akses langsung via IP:port, belum ada domain).
 
+> ⚠️ **BELUM ADA HTTPS/SSL.** Akses masih HTTP polos — login TU (username+password) dikirim dalam
+> bentuk teks polos, bisa disadap di jaringan yang sama (misal WiFi publik). **Jangan dipakai TU
+> untuk input data harian sungguhan sampai ini dibereskan.** Keputusan 2026-10-27: domain
+> ditunda (belum diputuskan domainnya apa), jadi untuk sementara tetap HTTP — pasang HTTPS begitu
+> domain sudah ada (tinggal arahkan DNS ke Cloudflare + copy pola nginx+SSL dari
+> `/etc/nginx/sites-available/rizqflow.roziqrizal.com` di VPS, sudah ada sertifikat Cloudflare
+> Origin terpasang di `/etc/nginx/ssl/`).
+
 - Lokasi di VPS: `~/apps/yayasanpendidikanalhikmah-web-app` (git clone biasa dari repo ini, SSH: `ssh -i ~/.ssh/id_ed25519_vps_jakarta elahady@103.54.170.198`).
 - `Dockerfile` — single-stage, `node:22-bookworm-slim` (bukan Alpine, biar Prisma generate engine yang cocok tanpa config `binaryTargets` tambahan), install `openssl` eksplisit (tanpa ini Prisma warning "failed to detect libssl version"), full `node_modules` disertakan (bukan `output: "standalone"` — disengaja, lebih simpel & disk VPS longgar (47GB free), standalone+Prisma CLI untuk migrasi lebih ribet untuk app sekecil ini).
 - `docker-compose.yml` — **`name:` wajib eksplisit** (pelajaran dari rizqflow: folder bernama "server" di app lain sempat bentrok/menimpa container app lain karena nama project default ikut nama folder). Port `0.0.0.0:8083:3000` (bukan `127.0.0.1` seperti rizqflow — app itu sengaja hanya lewat nginx+domain, app ini sengaja akses langsung IP:port). Network `shared-db` (external) untuk konek ke `shared-mysql`.
