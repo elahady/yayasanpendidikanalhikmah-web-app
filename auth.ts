@@ -4,6 +4,13 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  // Diakses lewat IP:port selama belum ada domain tetap (lihat
+  // docs/tahapan-pengembangan.md Tahap 6) — tanpa ini NextAuth menolak
+  // request dengan error "UntrustedHost" karena Host header bukan domain
+  // yang "dikenal". Aman di sini karena akses publik tetap lewat HTTPS
+  // Cloudflare begitu domain terpasang; tinjau ulang kalau nanti pindah
+  // ke setup multi-tenant/multi-domain.
+  trustHost: true,
   session: { strategy: "jwt" },
   pages: { signIn: "/admin/login" },
   providers: [

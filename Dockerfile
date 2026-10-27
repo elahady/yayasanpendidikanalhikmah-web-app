@@ -4,6 +4,10 @@ FROM node:22-bookworm-slim
 
 WORKDIR /app
 
+# Prisma butuh OpenSSL untuk deteksi engine yang benar (tanpa ini ada warning
+# "failed to detect libssl version" saat generate/runtime).
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+
 COPY package.json package-lock.json ./
 RUN npm ci
 
