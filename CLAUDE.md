@@ -26,11 +26,11 @@ Dokumen konsep (kurikulum, proposal donatur) ada di repo terpisah: [yayasanpendi
 
 ## Struktur Rute (Tahap 0, sudah ada skeleton-nya)
 
-- `app/(site)/` — halaman publik, pakai layout nav bersama: `/` (beranda), `/kurikulum-tpq`, `/kurikulum-diniyah`, `/struktur-organisasi`, `/tentang`. Semua masih placeholder "TODO" — konten dari riset ada di `docs/tahapan-pengembangan.md`.
-- `app/admin/` — admin TU, dilindungi `proxy.ts` (redirect ke `/admin/login` kalau belum login): `/admin` (dashboard), `/admin/login`, `/admin/santri`, `/admin/ustadz`, `/admin/absensi-santri`, `/admin/absensi-ustadz`, `/admin/progress`. Semua masih placeholder kecuali login (sudah fungsional).
+- `app/(site)/` — halaman publik, pakai layout nav bersama: `/` (beranda), `/kurikulum-tpq`, `/kurikulum-diniyah`, `/struktur-organisasi`, `/tentang`. Konten dari riset sudah terisi (Tahap 1-3), placeholder jelas untuk data yang belum final (nama pengurus, jadwal, pengajar).
+- `app/admin/` — admin TU, dilindungi `proxy.ts` (redirect ke `/admin/login` kalau belum login): `/admin` (dashboard), `/admin/login`, `/admin/santri`, `/admin/ustadz` (CRUD, Tahap 4), `/admin/absensi-santri`, `/admin/absensi-ustadz`, `/admin/progress` (Tahap 5). Semua sudah fungsional.
 - `auth.ts` (root) — konfigurasi NextAuth Credentials provider.
-- `prisma/schema.prisma` — skema lengkap (model `TU`, `Santri`, `Ustadz`, `AbsensiSantri`, `AbsensiUstadz`, enum `Jenjang`, `JilidNahdliyah`).
-- `prisma/seed.ts` — buat 1 akun TU dari env `TU_USERNAME`/`TU_PASSWORD`. Jalankan dengan `npx tsx prisma/seed.ts` (atau setup `prisma.seed` di package.json) setelah `DATABASE_URL` terisi dan migrasi jalan.
-- `.env.example` — salin ke `.env`, isi `DATABASE_URL`, `AUTH_SECRET` (generate: `npx auth secret`), `TU_USERNAME`/`TU_PASSWORD`.
+- `prisma/schema.prisma` — skema lengkap (model `TU`, `Santri`, `Ustadz`, `AbsensiSantri`, `AbsensiUstadz`, enum `Jenjang`, `JilidNahdliyah`). `prisma/migrations/` sudah ada (migration `init`, dibuat & dites dengan MySQL lokal XAMPP).
+- `prisma/seed.ts` — buat 1 akun TU dari env `TU_USERNAME`/`TU_PASSWORD`. Jalankan dengan `npx tsx prisma/seed.ts` setelah `DATABASE_URL` terisi dan migrasi jalan.
+- `.env.example` — salin ke `.env`, isi `DATABASE_URL`, `AUTH_SECRET` (generate: `npx auth secret`), `TU_USERNAME`/`TU_PASSWORD`. `.env` sendiri gitignored.
 
-**Belum diverifikasi end-to-end**: belum ada koneksi ke database MySQL riil saat Tahap 0 dikerjakan (tidak ada akses ke `shared-mysql` VPS dari environment dev ini), jadi alur login belum pernah dites jalan beneran — baru lolos `npm run build` dan `npm run lint`. Tes manual (isi `.env`, `prisma migrate dev`, `seed`, coba login) perlu dilakukan begitu ada akses DB.
+**Sudah dites end-to-end secara lokal** (2026-10-27) pakai MySQL XAMPP (`C:\xampp\mysql_start.bat`, database `tpq_alhikmah`, bukan `shared-mysql` VPS — itu baru akan dites saat Tahap 6/deploy): migrasi jalan, seed akun TU jalan, login lewat `npm run dev` berhasil, CRUD Santri/Ustadz dan form Absensi/Progress terverifikasi baca-tulis data dengan benar lewat smoke test manual (login via API, insert data tes via Prisma langsung, cek muncul di semua halaman terkait, lalu data tes dihapus lagi). Build (`npm run build`) dan lint (`npm run lint`) tetap jadi pengecekan standar sebelum commit.
