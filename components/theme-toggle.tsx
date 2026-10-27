@@ -22,7 +22,12 @@ export function ThemeToggle() {
   function toggle() {
     const next = theme === "dark" ? "light" : "dark";
     document.documentElement.setAttribute("data-theme", next);
-    localStorage.setItem("theme", next);
+    try {
+      localStorage.setItem("theme", next);
+    } catch {
+      // Beberapa browser mobile (mode privat, in-app browser WA/IG) menolak
+      // akses localStorage — tema tetap ganti di layar, cuma tidak diingat.
+    }
   }
 
   return (
@@ -30,7 +35,7 @@ export function ThemeToggle() {
       type="button"
       onClick={toggle}
       aria-label={theme === "dark" ? "Ganti ke tampilan terang" : "Ganti ke tampilan gelap"}
-      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border text-ink-muted transition hover:border-border-strong hover:text-ink"
+      className="flex h-10 w-10 shrink-0 touch-manipulation items-center justify-center rounded-full border border-border text-ink-muted transition hover:border-border-strong hover:text-ink active:scale-95"
     >
       {theme === "dark" ? (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

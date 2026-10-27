@@ -13,24 +13,31 @@ const navItems = [
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-1 flex-col bg-bg">
-      <header className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-4 px-6 py-7">
-        <Link href="/">
-          <Logo />
-        </Link>
-        <nav className="flex flex-wrap items-center gap-7 text-[15px] font-medium">
-          {navItems.slice(1).map((item) => (
-            <Link key={item.href} href={item.href} className="text-ink-muted transition hover:text-ink">
-              {item.label}
+      <header className="sticky top-0 z-30 border-b border-border bg-bg/95 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-4 px-6 py-5">
+          <div className="flex items-center gap-3">
+            <Link href="/">
+              <Logo />
             </Link>
-          ))}
-          <Link
-            href="/admin"
-            className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-bg transition hover:opacity-90"
-          >
-            Masuk TU
-          </Link>
-          <ThemeToggle />
-        </nav>
+            {/* Ditaruh satu baris dengan logo (bukan ikut nav yang wrap) supaya
+                selalu kelihatan & bisa ditap di layar HP, tidak ikut "terkubur"
+                saat link nav lain membungkus ke baris berikutnya. */}
+            <ThemeToggle />
+          </div>
+          <nav className="flex flex-wrap items-center gap-5 text-[15px] font-medium sm:gap-7">
+            {navItems.slice(1).map((item) => (
+              <Link key={item.href} href={item.href} className="text-ink-muted transition hover:text-ink">
+                {item.label}
+              </Link>
+            ))}
+            <Link
+              href="/admin"
+              className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-bg transition hover:opacity-90"
+            >
+              Masuk TU
+            </Link>
+          </nav>
+        </div>
       </header>
       <main className="w-full flex-1">{children}</main>
       <footer className="mt-24 border-t border-border">
