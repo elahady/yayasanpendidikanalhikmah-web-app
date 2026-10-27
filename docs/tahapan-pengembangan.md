@@ -10,10 +10,16 @@ Memetakan hasil riset (lihat repo [yayasanpendidikanalhikmah](https://github.com
 | 1-3 | ✅ Selesai (2026-10-27) | Halaman Publik | Kurikulum TPQ (An-Nahdhiyah), Kurikulum Madrasah Diniyah, Struktur Organisasi, Tentang, Beranda — konten dari riset, placeholder jelas untuk data yang belum final (nama pengurus, jadwal, pengajar) |
 | 4 | ✅ Selesai (2026-10-27) | Admin: Master Data | CRUD Santri (nama, jenjang, kelas) dan Ustadz/Ustadzah (nama, mapel) via Server Actions, mobile-first |
 | 5 | ✅ Selesai (2026-10-27) | Admin: Absensi & Progress | Form absensi harian santri & ustadz (mobile-first, default hadir, bisa dikoreksi), update progress santri (jilid An-Nahdhiyah + catatan Madin), ringkasan distribusi jilid |
-| 6 | ⏳ Belum — butuh konfirmasi sebelum eksekusi ke VPS nyata | Deploy | Docker container di VPS `103.54.170.198`, akses dev via IP:port, domain menyusul |
+| 6 | ✅ Selesai (2026-10-27) | Deploy | **Live** di `http://103.54.170.198:8083` — Docker container di VPS, database `tpq_alhikmah` di `shared-mysql`, domain terpisah menyusul |
 | *Ditunda* | — | Donasi, Legalitas, Galeri | Sengaja tidak masuk versi awal (keputusan 2026-10-27) |
 
-Tahap 0-5 dikerjakan 2026-10-27: Tahap 0 manual, Tahap 1-3/4/5 lewat 3 agent paralel (git worktree terisolasi) lalu di-merge ke `main`. Build (`npm run build`) dan lint (`npm run lint`) lolos bersih di hasil gabungan. **Belum pernah dites end-to-end dengan database MySQL nyata** (tidak ada akses ke `shared-mysql` VPS dari environment pengembangan ini) — perlu tes manual (isi `.env`, `prisma migrate dev`, `npx tsx prisma/seed.ts`, coba login & CRUD beneran) begitu ada akses DB, idealnya sebelum atau sesaat setelah Tahap 6.
+Tahap 0-6 dikerjakan 2026-10-27: Tahap 0 manual, Tahap 1-3/4/5 lewat 3 agent paralel (git worktree terisolasi) lalu di-merge ke `main`, Tahap 6 deploy manual ke VPS. Semua tahap lolos `npm run build` dan `npm run lint`, dan sudah dites end-to-end dengan database MySQL nyata (lokal via XAMPP, lalu production via `shared-mysql` VPS) — login, CRUD, absensi, progress semua terverifikasi baca-tulis data dengan benar.
+
+**Masalah yang ditemukan & diperbaiki saat deploy ke VPS:**
+- NextAuth menolak request karena diakses lewat IP:port bukan domain (`UntrustedHost`) — fix: `trustHost: true` di `auth.ts`.
+- Prisma tidak bisa deteksi versi OpenSSL di image Docker — fix: install `openssl` di `Dockerfile` sebelum `prisma generate`.
+
+Detail kredensial database/akun produksi ada di `.env.production` di VPS (`~/apps/yayasanpendidikanalhikmah-web-app/.env.production`, tidak di-commit ke git) — lihat `CLAUDE.md` bagian Deploy untuk cara reproduce/update.
 
 Detail tiap tahap ada di bawah.
 

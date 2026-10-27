@@ -24,6 +24,18 @@ Dokumen konsep (kurikulum, proposal donatur) ada di repo terpisah: [yayasanpendi
 - UI admin: mobile-first (TU input data dari HP).
 - Deploy: Docker container di VPS `103.54.170.198`. Selama development diakses via IP:port langsung; domain terpisah menyusul kemudian (belum diputuskan).
 
+## Deploy (Tahap 6, live sejak 2026-10-27)
+
+**Live di** `http://103.54.170.198:8083` (akses langsung via IP:port, belum ada domain).
+
+- Lokasi di VPS: `~/apps/yayasanpendidikanalhikmah-web-app` (git clone biasa dari repo ini, SSH: `ssh -i ~/.ssh/id_ed25519_vps_jakarta elahady@103.54.170.198`).
+- `Dockerfile` — single-stage, `node:22-bookworm-slim` (bukan Alpine, biar Prisma generate engine yang cocok tanpa config `binaryTargets` tambahan), install `openssl` eksplisit (tanpa ini Prisma warning "failed to detect libssl version"), full `node_modules` disertakan (bukan `output: "standalone"` — disengaja, lebih simpel & disk VPS longgar (47GB free), standalone+Prisma CLI untuk migrasi lebih ribet untuk app sekecil ini).
+- `docker-compose.yml` — **`name:` wajib eksplisit** (pelajaran dari rizqflow: folder bernama "server" di app lain sempat bentrok/menimpa container app lain karena nama project default ikut nama folder). Port `0.0.0.0:8083:3000` (bukan `127.0.0.1` seperti rizqflow — app itu sengaja hanya lewat nginx+domain, app ini sengaja akses langsung IP:port). Network `shared-db` (external) untuk konek ke `shared-mysql`.
+- `auth.ts` — **`trustHost: true` wajib** selama akses via IP:port (NextAuth menolak request dengan error `UntrustedHost` tanpa ini). Tinjau ulang kalau nanti pindah ke domain tetap (boleh dipertahankan, tidak masalah selama traffic publik tetap lewat HTTPS Cloudflare).
+- `.env.production` di VPS (**tidak di-commit ke git**, isi manual sekali): `DATABASE_URL` ke `shared-mysql:3306/tpq_alhikmah` dengan user `tpq_alhikmah` khusus (dibuat via `docker exec shared-mysql mysql -uroot -p... -e "CREATE DATABASE/USER/GRANT"`, bukan pakai root), `AUTH_SECRET` (beda dari `.env` lokal), `TU_USERNAME`/`TU_PASSWORD`.
+- **Cara redeploy setelah ada perubahan kode**: `git push` dari lokal, lalu di VPS: `cd ~/apps/yayasanpendidikanalhikmah-web-app && git pull && docker compose build && docker compose up -d`. Migrasi schema baru (kalau ada): `docker compose exec app npx prisma migrate deploy`.
+- Kredensial database production (password user `tpq_alhikmah`, `AUTH_SECRET` production) **hanya ada di `.env.production` di VPS** — kalau lupa/perlu reset, generate baru dan update manual di sana, jangan simpan di repo manapun.
+
 ## Struktur Rute (Tahap 0, sudah ada skeleton-nya)
 
 - `app/(site)/` — halaman publik, pakai layout nav bersama: `/` (beranda), `/kurikulum-tpq`, `/kurikulum-diniyah`, `/struktur-organisasi`, `/tentang`. Konten dari riset sudah terisi (Tahap 1-3), placeholder jelas untuk data yang belum final (nama pengurus, jadwal, pengajar).
