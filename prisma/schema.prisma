@@ -23,11 +23,56 @@ enum JilidNahdliyah {
   AL_QURAN
 }
 
-model TU {
-  id           String   @id @default(cuid())
-  username     String   @unique
-  passwordHash String
-  createdAt    DateTime @default(now())
+/// Peran akun. Satu akun boleh punya lebih dari satu peran (tabel AkunRole).
+/// ADMIN dan TU sementara hak aksesnya sama (lihat lib/authz.ts).
+enum Role {
+  ADMIN
+  TU
+  PENGAWAS
+  PIKET
+  USTADZ
+  WALI
+}
+
+/// Akun login multi-role (menggantikan model TU lama; baris TU lama dipertahankan
+/// oleh migrasi dan otomatis diberi role TU). Akun dinonaktifkan lewat `aktif`,
+/// tidak dihapus, supaya jejak `dicatatOleh` di absensi tetap utuh.
+model Akun {
+  id            String          @id @default(cuid())
+  username      String          @unique
+  passwordHash  String
+  nama          String
+  aktif         Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+  /// Tautan ke data ustadz (opsional, unik): dipakai aturan "tidak boleh
+  /// mengabsen diri sendiri".
+  ustadzId      String?         @unique
+  ustadz        Ustadz?         @relation(fields: [ustadzId], references: [id], onDelete: SetNull)
+  roles         AkunRole[]
+  anak          WaliSantri[]
+  absensiSantri AbsensiSantri[]
+  absensiUstadz AbsensiUstadz[]
+}
+
+/// Himpunan role per akun (satu baris per pasangan akun+role).
+model AkunRole {
+  akunId String
+  akun   Akun   @relation(fields: [akunId], references: [id], onDelete: Cascade)
+  role   Role
+
+  @@id([akunId, role])
+  @@index([role])
+}
+
+/// Relasi banyak-ke-banyak akun WALI <-> santri (anak).
+model WaliSantri {
+  akunId   String
+  akun     Akun   @relation(fields: [akunId], references: [id], onDelete: Cascade)
+  santriId String
+  santri   Santri @relation(fields: [santriId], references: [id], onDelete: Cascade)
+
+  @@id([akunId, santriId])
+  @@index([santriId])
 }
 
 model Santri {
@@ -40,6 +85,7 @@ model Santri {
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt
   absensi              AbsensiSantri[]
+  wali                 WaliSantri[]
 }
 
 model Ustadz {
@@ -49,28 +95,37 @@ model Ustadz {
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
   absensi     AbsensiUstadz[]
+  akun        Akun?
 }
 
 model AbsensiSantri {
-  id         String   @id @default(cuid())
-  santriId   String
-  santri     Santri   @relation(fields: [santriId], references: [id], onDelete: Cascade)
-  tanggal    DateTime @db.Date
-  hadir      Boolean
-  keterangan String?
-  createdAt  DateTime @default(now())
+  id            String   @id @default(cuid())
+  santriId      String
+  santri        Santri   @relation(fields: [santriId], references: [id], onDelete: Cascade)
+  tanggal       DateTime @db.Date
+  hadir         Boolean
+  keterangan    String?
+  createdAt     DateTime @default(now())
+  /// Akun terakhir yang menyimpan entri ini (null = data lama sebelum multi-role).
+  dicatatOlehId String?
+  dicatatOleh   Akun?    @relation(fields: [dicatatOlehId], references: [id], onDelete: SetNull)
 
   @@unique([santriId, tanggal])
+  @@index([dicatatOlehId])
 }
 
 model AbsensiUstadz {
-  id         String   @id @default(cuid())
-  ustadzId   String
-  ustadz     Ustadz   @relation(fields: [ustadzId], references: [id], onDelete: Cascade)
-  tanggal    DateTime @db.Date
-  hadir      Boolean
-  keterangan String?
-  createdAt  DateTime @default(now())
+  id            String   @id @default(cuid())
+  ustadzId      String
+  ustadz        Ustadz   @relation(fields: [ustadzId], references: [id], onDelete: Cascade)
+  tanggal       DateTime @db.Date
+  hadir         Boolean
+  keterangan    String?
+  createdAt     DateTime @default(now())
+  /// Akun terakhir yang menyimpan entri ini (null = data lama sebelum multi-role).
+  dicatatOlehId String?
+  dicatatOleh   Akun?    @relation(fields: [dicatatOlehId], references: [id], onDelete: SetNull)
 
   @@unique([ustadzId, tanggal])
+  @@index([dicatatOlehId])
 }
