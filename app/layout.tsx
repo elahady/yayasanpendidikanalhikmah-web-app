@@ -19,13 +19,27 @@ export const metadata: Metadata = {
   description: "TPQ & Madrasah Diniyah Yayasan Pendidikan Al-Hikmah",
 };
 
+// Tema: 'system' | 'light' | 'dark' tersimpan di localStorage('theme'); nilai lain /
+// kosong = 'system'. data-theme-pref memuat pilihan, data-theme SELALU hasil
+// eksplisit light|dark (lihat components/theme-pref.ts). Untuk 'system', perubahan
+// mode gelap/terang perangkat diikuti lewat listener di bawah.
 const themeInitScript = `
 try {
-  var stored = localStorage.getItem('theme');
-  var theme = stored === 'light' || stored === 'dark'
-    ? stored
-    : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-  document.documentElement.setAttribute('data-theme', theme);
+  var root = document.documentElement;
+  var pref = 'system';
+  try {
+    var stored = localStorage.getItem('theme');
+    if (stored === 'light' || stored === 'dark') pref = stored;
+  } catch (e) {}
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var apply = function () {
+    var p = root.getAttribute('data-theme-pref');
+    root.setAttribute('data-theme', p === 'light' || p === 'dark' ? p : (mq.matches ? 'dark' : 'light'));
+  };
+  root.setAttribute('data-theme-pref', pref);
+  apply();
+  if (mq.addEventListener) mq.addEventListener('change', apply);
+  else if (mq.addListener) mq.addListener(apply);
 } catch (e) {}
 `;
 

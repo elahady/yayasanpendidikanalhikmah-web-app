@@ -1,44 +1,42 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { setThemePref, temaBerikutnya, THEME_LABEL, useThemePref } from "@/components/theme-pref";
 
-function subscribe(callback: () => void) {
-  const observer = new MutationObserver(callback);
-  observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
-  return () => observer.disconnect();
-}
+const svgProps = {
+  width: 18,
+  height: 18,
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 1.6,
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
+  "aria-hidden": true,
+} as const;
 
-function getSnapshot(): "light" | "dark" {
-  return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
-}
-
-function getServerSnapshot(): "light" | "dark" {
-  return "light";
-}
-
+/**
+ * Tombol cepat tema: siklus Ikuti sistem -> Terang -> Gelap. Ikonnya mengikuti
+ * PILIHAN (layar/matahari/bulan), bukan hasil akhir, supaya konsisten dengan
+ * pemilih di halaman Profil (components/theme-picker.tsx).
+ */
 export function ThemeToggle() {
-  const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-
-  function toggle() {
-    const next = theme === "dark" ? "light" : "dark";
-    document.documentElement.setAttribute("data-theme", next);
-    try {
-      localStorage.setItem("theme", next);
-    } catch {
-      // Beberapa browser mobile (mode privat, in-app browser WA/IG) menolak
-      // akses localStorage — tema tetap ganti di layar, cuma tidak diingat.
-    }
-  }
+  const pref = useThemePref();
+  const berikut = temaBerikutnya(pref);
 
   return (
     <button
       type="button"
-      onClick={toggle}
-      aria-label={theme === "dark" ? "Ganti ke tampilan terang" : "Ganti ke tampilan gelap"}
-      className="flex h-10 w-10 shrink-0 touch-manipulation items-center justify-center rounded-full border border-border text-ink-muted transition hover:border-border-strong hover:text-ink active:scale-95"
+      onClick={() => setThemePref(berikut)}
+      aria-label={`Tampilan: ${THEME_LABEL[pref]}. Ketuk untuk ganti ke ${THEME_LABEL[berikut]}`}
+      title={`Tampilan: ${THEME_LABEL[pref]}`}
+      className="flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-full border border-border text-ink-muted transition hover:border-border-strong hover:text-ink active:scale-95"
     >
-      {theme === "dark" ? (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {pref === "dark" ? (
+        <svg {...svgProps}>
+          <path d="M21 13.2C19.9 13.7 18.7 14 17.4 14C12.8 14 9 10.2 9 5.6C9 4.3 9.3 3.1 9.8 2C5.8 2.9 2.8 6.5 2.8 10.8C2.8 15.8 6.9 19.9 11.9 19.9C16.2 19.9 19.8 16.9 20.7 12.9C20.8 13 21 13.1 21 13.2Z"></path>
+        </svg>
+      ) : pref === "light" ? (
+        <svg {...svgProps}>
           <circle cx="12" cy="12" r="4.5"></circle>
           <path d="M12 2.5V5"></path>
           <path d="M12 19V21.5"></path>
@@ -50,8 +48,10 @@ export function ThemeToggle() {
           <path d="M18 6L19.8 4.2"></path>
         </svg>
       ) : (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M21 13.2C19.9 13.7 18.7 14 17.4 14C12.8 14 9 10.2 9 5.6C9 4.3 9.3 3.1 9.8 2C5.8 2.9 2.8 6.5 2.8 10.8C2.8 15.8 6.9 19.9 11.9 19.9C16.2 19.9 19.8 16.9 20.7 12.9C20.8 13 21 13.1 21 13.2Z"></path>
+        <svg {...svgProps}>
+          <rect x="3" y="4" width="18" height="12" rx="2"></rect>
+          <path d="M8 20H16"></path>
+          <path d="M12 16V20"></path>
         </svg>
       )}
     </button>

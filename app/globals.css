@@ -21,6 +21,17 @@
   --color-border: rgba(35, 30, 25, 0.1);
   --color-border-strong: rgba(35, 30, 25, 0.18);
 
+  /* Status & komponen dashboard admin. Status tidak boleh hanya warna: selalu
+     dipasangkan dengan teks/angka di markup. */
+  --color-ok: #333f2c;
+  --color-ok-bg: #e2e9d6;
+  --color-no: #8f3f18;
+  --color-no-bg: #f7dfd0;
+  --color-soft: #e2e9d6; /* latar menu aktif */
+  --color-track: #ebe3cf; /* jalur batang/cincin grafik */
+  --color-avatar: #d27f52;
+  --color-avatar-ink: #1c1a15;
+
   --color-background: var(--color-bg);
   --color-foreground: var(--color-ink);
 
@@ -41,6 +52,14 @@
   --color-link: #e0975f;
   --color-border: rgba(255, 255, 255, 0.1);
   --color-border-strong: rgba(255, 255, 255, 0.18);
+  --color-ok: #b4c99e;
+  --color-ok-bg: #36442c;
+  --color-no: #ffdcc8;
+  --color-no-bg: #5a2d17;
+  --color-soft: #36442c;
+  --color-track: #38332a;
+  --color-avatar: #e08552;
+  --color-avatar-ink: #1c1a15;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -57,6 +76,14 @@
     --color-link: #e0975f;
     --color-border: rgba(255, 255, 255, 0.1);
     --color-border-strong: rgba(255, 255, 255, 0.18);
+    --color-ok: #b4c99e;
+    --color-ok-bg: #36442c;
+    --color-no: #ffdcc8;
+    --color-no-bg: #5a2d17;
+    --color-soft: #36442c;
+    --color-track: #38332a;
+    --color-avatar: #e08552;
+    --color-avatar-ink: #1c1a15;
   }
 }
 
