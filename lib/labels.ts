@@ -1,4 +1,4 @@
-import type { Jenjang, JilidNahdliyah } from "@prisma/client";
+import type { Jenjang, JilidNahdliyah, Role } from "@prisma/client";
 
 /**
  * Label Bahasa Indonesia untuk enum Jenjang, dipakai di halaman admin
@@ -59,3 +59,23 @@ export function todayDateInputValue(): string {
 export function isValidDateInputValue(value: unknown): value is string {
   return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
 }
+
+/** Label peran akun untuk halaman /admin/akun. */
+export const ROLE_LABEL: Record<Role, string> = {
+  ADMIN: "Admin",
+  TU: "TU",
+  PENGAWAS: "Pengawas",
+  PIKET: "Piket",
+  USTADZ: "Ustadz/Ustadzah",
+  WALI: "Wali santri",
+};
+
+/** Ringkasan hak akses per peran (tampil di form akun). */
+export const ROLE_DESKRIPSI: Record<Role, string> = {
+  ADMIN: "Akses penuh, termasuk panel web.",
+  TU: "Akses penuh, termasuk panel web (sama dengan Admin).",
+  PENGAWAS: "Melihat semua data dan rekap harian, tidak bisa mengubah.",
+  PIKET: "Mencatat absensi ustadz; melihat data santri.",
+  USTADZ: "Mencatat absensi santri & progress; melihat semua santri.",
+  WALI: "Hanya melihat data santri anaknya.",
+};
