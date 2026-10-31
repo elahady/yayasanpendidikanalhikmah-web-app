@@ -7,6 +7,7 @@ import { persen, tanggalPanjang } from "@/components/dashboard/format";
 import { eyebrow, kartu, tombolGhost, tombolUtama } from "@/components/dashboard/gaya";
 import { GrafikKehadiran } from "@/components/dashboard/grafik-kehadiran";
 import { IkonCentang, IkonTambah } from "@/components/dashboard/ikon";
+import { KartuLibur } from "@/components/dashboard/kartu-libur";
 import { PerluPerhatian } from "@/components/dashboard/perlu-perhatian";
 import { Pill } from "@/components/dashboard/pill";
 import { TanggaJilid } from "@/components/dashboard/tangga-jilid";
@@ -20,14 +21,23 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <Sapaan nama={actor.nama} tanggal={data.tanggal} ringkasan={r} />
+      <Sapaan
+        nama={actor.nama}
+        tanggal={data.tanggal}
+        ringkasan={r}
+        hariBelajar={data.hariBelajar}
+      />
 
       {r ? (
         <>
-          <AngkaUtama ringkasan={r} />
+          <AngkaUtama ringkasan={r} tanggal={data.tanggal} hariBelajar={data.hariBelajar} />
           <div className="flex flex-wrap items-start gap-6">
             <div className="flex min-w-0 flex-[1_1_520px] flex-col gap-6">
-              <PerluPerhatian perhatian={r.perhatian} belumAdaSantri={r.santri.total === 0} />
+              <PerluPerhatian
+                perhatian={r.perhatian}
+                belumAdaSantri={r.santri.total === 0}
+                libur={!data.hariBelajar}
+              />
               <GrafikKehadiran
                 tren={r.tren}
                 hariIni={data.tanggal}
@@ -53,15 +63,27 @@ function Sapaan({
   nama,
   tanggal,
   ringkasan,
+  hariBelajar,
 }: {
   nama: string;
   tanggal: string;
   ringkasan: DashboardRingkasan | null;
+  hariBelajar: boolean;
 }) {
   let kalimat: React.ReactNode = null;
   if (ringkasan) {
     const n = ringkasan.perhatian.length;
-    if (n > 0) {
+    if (!hariBelajar) {
+      kalimat =
+        n > 0 ? (
+          <>
+            Hari ini libur. Ada <strong className="text-ink">{n} hal</strong> yang bisa ditindaklanjuti
+            sebelum hari belajar berikutnya.
+          </>
+        ) : (
+          "Hari ini libur. TPQ belajar Senin–Jumat, kegiatan dilanjutkan hari Senin."
+        );
+    } else if (n > 0) {
       kalimat = (
         <>
           Hari ini ada <strong className="text-ink">{n} hal</strong> yang perlu ditindaklanjuti
@@ -85,10 +107,12 @@ function Sapaan({
         {kalimat && <p className="max-w-xl text-ink-muted">{kalimat}</p>}
       </div>
       <div className="flex flex-wrap gap-2.5">
-        <Link href="/admin/absensi-santri" className={tombolUtama}>
-          <IkonCentang />
-          Catat absensi
-        </Link>
+        {hariBelajar && (
+          <Link href="/admin/absensi-santri" className={tombolUtama}>
+            <IkonCentang />
+            Catat absensi
+          </Link>
+        )}
         <Link href="/admin/santri" className={tombolGhost}>
           <IkonTambah />
           Tambah santri
@@ -101,7 +125,15 @@ function Sapaan({
   );
 }
 
-function AngkaUtama({ ringkasan }: { ringkasan: DashboardRingkasan }) {
+function AngkaUtama({
+  ringkasan,
+  tanggal,
+  hariBelajar,
+}: {
+  ringkasan: DashboardRingkasan;
+  tanggal: string;
+  hariBelajar: boolean;
+}) {
   const { santri, ustadz } = ringkasan;
   const persenHadir = persen(santri.hadir, santri.total);
   const alQuran = santri.perJilid.AL_QURAN ?? 0;
@@ -112,6 +144,9 @@ function AngkaUtama({ ringkasan }: { ringkasan: DashboardRingkasan }) {
       aria-label="Ringkasan hari ini"
       className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,250px),1fr))] gap-4"
     >
+      {!hariBelajar ? (
+        <KartuLibur tanggal={tanggal} />
+      ) : (
       <div className={`${kartu} flex items-center gap-5`}>
         <div
           role="img"
@@ -148,10 +183,16 @@ function AngkaUtama({ ringkasan }: { ringkasan: DashboardRingkasan }) {
           )}
         </div>
       </div>
+      )}
 
       <div className={`${kartu} flex flex-col justify-center gap-2`}>
         <span className={eyebrow}>Ustadz &amp; ustadzah</span>
-        {ustadz.total > 0 ? (
+        {!hariBelajar && ustadz.hadir + ustadz.tidakHadir === 0 ? (
+          <>
+            <span className={angkaBesar}>Libur</span>
+            <span className="text-[13px] text-ink-muted">Tidak ada absensi pada hari libur</span>
+          </>
+        ) : ustadz.total > 0 ? (
           <>
             <span className={angkaBesar}>
               {ustadz.hadir}{" "}

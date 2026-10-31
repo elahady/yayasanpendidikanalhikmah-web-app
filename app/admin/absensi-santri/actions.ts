@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getWebActor } from "@/lib/web-auth";
 import { prisma } from "@/lib/prisma";
 import { isValidDateInputValue } from "@/lib/labels";
+import { hariBelajar } from "@/lib/jadwal";
 
 /**
  * Simpan absensi harian seluruh santri untuk satu tanggal sekaligus.
@@ -22,6 +23,10 @@ export async function simpanAbsensiSantri(formData: FormData): Promise<void> {
   const tanggalStr = formData.get("tanggal");
   if (!isValidDateInputValue(tanggalStr)) {
     throw new Error("Tanggal tidak valid.");
+  }
+  // Hari libur (Sabtu/Minggu) ditolak; halaman menampilkan PESAN_LIBUR lewat ?galat=libur.
+  if (!hariBelajar(tanggalStr)) {
+    redirect(`/admin/absensi-santri?tanggal=${encodeURIComponent(tanggalStr)}&galat=libur`);
   }
   const tanggal = new Date(tanggalStr);
 

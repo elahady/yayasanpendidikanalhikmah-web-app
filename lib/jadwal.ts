@@ -27,3 +27,16 @@ export function hariBelajar(tanggal: string): boolean {
 export function namaHari(tanggal: string): string {
   return NAMA_HARI[hariPekan(tanggal)];
 }
+
+/**
+ * Hari belajar terakhir pada atau sebelum `tanggal` (YYYY-MM-DD): `tanggal` itu sendiri bila
+ * hari belajar, selain itu hari belajar sebelumnya (Sabtu/Minggu -> Jumat).
+ */
+export function hariBelajarTerakhir(tanggal: string): string {
+  const d = new Date(`${tanggal}T00:00:00.000Z`);
+  if (Number.isNaN(d.getTime())) return tanggal;
+  while (!hariBelajar(d.toISOString().slice(0, 10))) {
+    d.setUTCDate(d.getUTCDate() - 1);
+  }
+  return d.toISOString().slice(0, 10);
+}

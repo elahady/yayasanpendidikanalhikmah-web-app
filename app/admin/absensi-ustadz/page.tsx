@@ -6,12 +6,14 @@ import {
   isValidDateInputValue,
   todayDateInputValue,
 } from "@/lib/labels";
+import { PemberitahuanLibur } from "@/components/admin/pemberitahuan-libur";
+import { hariBelajar } from "@/lib/jadwal";
 import { simpanAbsensiUstadz } from "./actions";
 
 export default async function AdminAbsensiUstadzPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tanggal?: string; tersimpan?: string }>;
+  searchParams: Promise<{ tanggal?: string; tersimpan?: string; galat?: string }>;
 }) {
   await wajibAdminHalaman();
   const sp = await searchParams;
@@ -19,6 +21,7 @@ export default async function AdminAbsensiUstadzPage({
     ? sp.tanggal
     : todayDateInputValue();
   const tanggal = new Date(tanggalStr);
+  const libur = !hariBelajar(tanggalStr);
 
   const [semuaUstadz, absensiTersimpan] = await Promise.all([
     prisma.ustadz.findMany({ orderBy: { nama: "asc" } }),
@@ -57,6 +60,14 @@ export default async function AdminAbsensiUstadzPage({
         </p>
       )}
 
+      {libur && (
+        <PemberitahuanLibur
+          tanggal={tanggalStr}
+          halaman="/admin/absensi-ustadz"
+          ditolak={sp.galat === "libur"}
+        />
+      )}
+
       <form method="get" className="flex items-end gap-3">
         <div className="flex-1">
           <label htmlFor="tanggal" className="block text-sm font-medium">
@@ -81,10 +92,13 @@ export default async function AdminAbsensiUstadzPage({
       <form action={simpanAbsensiUstadz} className="space-y-4">
         <input type="hidden" name="tanggal" value={tanggalStr} />
 
+        {/* Hari libur: form dinonaktifkan; daftar hanya tampil bila ada data lama. */}
+        <fieldset disabled={libur} className="min-w-0">
+        {(!libur || absensiTersimpan.length > 0) && (
         <ul className="divide-y divide-black/10 rounded border border-black/10 dark:divide-white/10 dark:border-white/10">
           {semuaUstadz.map((ustadz) => {
             const existing = absensiMap.get(ustadz.id);
-            const defaultHadir = existing ? existing.hadir : true;
+            const defaultHadir = existing ? existing.hadir : !libur;
             return (
               <li key={ustadz.id} className="p-3">
                 <label className="flex min-h-11 cursor-pointer items-center gap-3">
@@ -112,14 +126,17 @@ export default async function AdminAbsensiUstadzPage({
             );
           })}
         </ul>
+        )}
+        </fieldset>
 
         <div className="fixed inset-x-0 bottom-0 border-t border-black/10 bg-background p-4 dark:border-white/10">
           <div className="mx-auto max-w-4xl">
             <button
               type="submit"
-              className="w-full rounded bg-foreground px-4 py-3 text-base font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]"
+              disabled={libur}
+              className="w-full rounded bg-foreground px-4 py-3 text-base font-medium text-background hover:bg-[#383838] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-foreground dark:hover:bg-[#ccc]"
             >
-              Simpan Absensi
+              {libur ? "Simpan Absensi (hari libur)" : "Simpan Absensi"}
             </button>
           </div>
         </div>

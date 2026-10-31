@@ -33,9 +33,12 @@ function Ikon({ kode }: { kode: PerhatianKode }) {
 export function PerluPerhatian({
   perhatian,
   belumAdaSantri,
+  libur = false,
 }: {
   perhatian: Perhatian[];
   belumAdaSantri: boolean;
+  /** Hari libur: jangan tampilkan "Semua beres hari ini" yang menyesatkan. */
+  libur?: boolean;
 }) {
   return (
     <section aria-labelledby="judul-perhatian" className={`${kartu} flex flex-col gap-4`}>
@@ -56,6 +59,18 @@ export function PerluPerhatian({
             <IkonTambah />
             Tambah santri
           </Link>
+        </div>
+      ) : perhatian.length === 0 && libur ? (
+        <div className="flex items-center gap-3 border-t border-border pt-4">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-bg-muted text-ink">
+            <IkonJam />
+          </span>
+          <div>
+            <p className="font-bold text-ink">Hari ini libur</p>
+            <p className="text-[13px] text-ink-muted">
+              Tidak ada absensi yang perlu dicatat. Pemantauan dilanjutkan pada hari belajar berikutnya.
+            </p>
+          </div>
         </div>
       ) : perhatian.length === 0 ? (
         <div className="flex items-center gap-3 border-t border-border pt-4">

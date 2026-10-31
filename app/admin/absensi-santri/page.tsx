@@ -8,12 +8,14 @@ import {
   isValidDateInputValue,
   todayDateInputValue,
 } from "@/lib/labels";
+import { PemberitahuanLibur } from "@/components/admin/pemberitahuan-libur";
+import { hariBelajar } from "@/lib/jadwal";
 import { simpanAbsensiSantri } from "./actions";
 
 export default async function AdminAbsensiSantriPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tanggal?: string; tersimpan?: string }>;
+  searchParams: Promise<{ tanggal?: string; tersimpan?: string; galat?: string }>;
 }) {
   await wajibAdminHalaman();
   const sp = await searchParams;
@@ -21,6 +23,7 @@ export default async function AdminAbsensiSantriPage({
     ? sp.tanggal
     : todayDateInputValue();
   const tanggal = new Date(tanggalStr);
+  const libur = !hariBelajar(tanggalStr);
 
   const [semuaSantri, absensiTersimpan] = await Promise.all([
     prisma.santri.findMany({
@@ -71,6 +74,14 @@ export default async function AdminAbsensiSantriPage({
         </p>
       )}
 
+      {libur && (
+        <PemberitahuanLibur
+          tanggal={tanggalStr}
+          halaman="/admin/absensi-santri"
+          ditolak={sp.galat === "libur"}
+        />
+      )}
+
       <form method="get" className="flex items-end gap-3">
         <div className="flex-1">
           <label htmlFor="tanggal" className="block text-sm font-medium">
@@ -95,7 +106,9 @@ export default async function AdminAbsensiSantriPage({
       <form action={simpanAbsensiSantri} className="space-y-6">
         <input type="hidden" name="tanggal" value={tanggalStr} />
 
-        {[...kelompok.entries()].map(([jenjang, byKelas]) => (
+        {/* Hari libur: form dinonaktifkan; daftar hanya tampil bila ada data lama. */}
+        <fieldset disabled={libur} className="min-w-0 space-y-6">
+        {(!libur || absensiTersimpan.length > 0) && [...kelompok.entries()].map(([jenjang, byKelas]) => (
           <section key={jenjang} className="space-y-4">
             <h2 className="text-lg font-semibold">
               Jenjang {JENJANG_LABEL[jenjang as keyof typeof JENJANG_LABEL] ?? jenjang}
@@ -108,7 +121,7 @@ export default async function AdminAbsensiSantriPage({
                 <ul className="divide-y divide-black/10 rounded border border-black/10 dark:divide-white/10 dark:border-white/10">
                   {daftar.map((santri) => {
                     const existing = absensiMap.get(santri.id);
-                    const defaultHadir = existing ? existing.hadir : true;
+                    const defaultHadir = existing ? existing.hadir : !libur;
                     return (
                       <li key={santri.id} className="p-3">
                         <label className="flex min-h-11 cursor-pointer items-center gap-3">
@@ -137,14 +150,16 @@ export default async function AdminAbsensiSantriPage({
             ))}
           </section>
         ))}
+        </fieldset>
 
         <div className="fixed inset-x-0 bottom-0 border-t border-black/10 bg-background p-4 dark:border-white/10">
           <div className="mx-auto max-w-4xl">
             <button
               type="submit"
-              className="w-full rounded bg-foreground px-4 py-3 text-base font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]"
+              disabled={libur}
+              className="w-full rounded bg-foreground px-4 py-3 text-base font-medium text-background hover:bg-[#383838] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-foreground dark:hover:bg-[#ccc]"
             >
-              Simpan Absensi
+              {libur ? "Simpan Absensi (hari libur)" : "Simpan Absensi"}
             </button>
           </div>
         </div>
