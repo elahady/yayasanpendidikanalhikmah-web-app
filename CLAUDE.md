@@ -4,6 +4,35 @@
 
 - **Setiap selesai ngoding (fitur/perubahan kode selesai dan jalan), langsung commit dan push.** Jangan menumpuk banyak perubahan tanpa commit, dan jangan berhenti di commit lokal saja — push ke `origin main` di setiap sesi kerja, jangan menunggu diminta.
 
+## Status Pengembangan
+
+_Diperbarui 31 Oktober 2026. Potret keadaan **sekarang**, bukan log: ubah di tempat setiap selesai pekerjaan nyata; riwayat ada di `git log`. Baca ini dulu saat membuka sesi baru._
+
+**Arah (diputuskan 2026-10-31):** web ini jadi backend multi-role + REST API untuk app Android (repo `C:\Project\Personal\yayasanpendidikanalhikmah-android`, Compose, rilis Play Store atas nama pribadi). Kebutuhan dari ketua takmir (KH Anam): pengurus piket mencatat absensi ustadz; ustadz mencatat absensi + progress santri tapi **tidak boleh** absensinya sendiri; pengawas (Pak Tri Joko, direktur pendidikan; Pak Anam; admin) melihat semua; wali santri melihat progress anaknya. Matriks role lengkap: `docs/api-contract.md`.
+
+### Sudah selesai
+- **Tahap 1, nginx+HTTPS di VPS:** site `tpq-alhikmah.roziqrizal.com` terpasang & diverifikasi lewat `curl --resolve`; **belum aktif dari luar** (record DNS Cloudflare belum ditambah user). Rincian di bagian Deploy.
+- **Tahap 2, backend multi-role + API v1:** di-commit & di-push (terakhir `b1e81e8`), dites lokal. **Belum di-deploy**: yang live di `http://103.54.170.198:8083` masih versi single-TU sebelum tahap 2.
+- **Tahap 3, app Android v1:** selesai & lulus unit test, tapi hanya commit lokal di PC utama (**belum ada remote git**) dan belum pernah dijalankan di emulator/HP. Status rinci: `CLAUDE.md` repo Android.
+
+### Belum selesai / berikutnya
+1. **DNS Cloudflare** (user): A `tpq-alhikmah` -> `103.54.170.198`, Proxied; SSL Full (strict). Lalu verifikasi `https://tpq-alhikmah.roziqrizal.com`.
+2. **Akun ADMIN pertama:** user menentukan username+password (masuk `.env.production` VPS sebagai `ADMIN_USERNAME`/`ADMIN_PASSWORD`, jangan ke repo).
+3. **Deploy tahap 2** setelah DNS terverifikasi, urutan di bagian "Multi-role & API v1". Ikutkan penutupan port publik 8083 (`127.0.0.1:8083:3000`) di redeploy yang sama, sekaligus menutup celah rate limit via IP:port. Perlu persetujuan user sebelum menyentuh VPS/DB produksi.
+4. **Uji end-to-end:** backend + Android di emulator, tiap role (ADMIN/TU, PENGAWAS, PIKET, USTADZ, WALI), lalu rapikan temuan (tampilan, ikon launcher beresolusi rendah).
+5. **Push repo Android ke remote** (user perlu memutuskan; tanpa itu repo hanya ada di satu PC).
+6. **Rilis Play Store:** akun developer pribadi (user daftar sendiri), halaman kebijakan privasi di web, formulir data safety, keystore & signing, closed testing (akun pribadi baru biasanya wajib ~12 tester selama ~14 hari: **cek aturan terbaru** sebelum menjanjikan jadwal).
+7. Reskin halaman admin lama (santri, ustadz, absensi, progress); notifikasi push + mode offline (versi 2).
+
+**Keputusan terbuka** (sementara memakai default di kurung): jilid Nahdliyah berlaku untuk jenjang mana saja (ditampilkan untuk semua santri); domain permanen yayasan (subdomain `roziqrizal.com`; kalau diganti, alamat API di app berubah dan perlu rilis ulang).
+
+### Catatan teknis yang tidak kelihatan dari kode
+- Keputusan sederhana sengaja: ADMIN dan TU role terpisah tapi hak akses sama; koreksi data = pencatat boleh ubah entri sendiri, ADMIN/TU semua, tanpa riwayat perubahan/persetujuan (TPQ masih kecil); akun wali dibuatkan TU (tanpa OTP); ustadz tidak dibatasi kelas; tanpa refresh token (JWT 30 hari).
+- Ustadz tidak boleh membuat **maupun mengubah** absensi atas namanya sendiri (kalau hanya "membuat", celahnya edit entri buatan piket).
+- Web `/admin` hanya ADMIN/TU; role lain memakai app Android lewat API.
+- Kontrak API `docs/api-contract.md` adalah sumber kebenaran bersama web dan Android: ubah dokumen dulu, baru kode di kedua sisi.
+- Pindah PC: SSH ke VPS butuh kunci per PC (lihat bagian Deploy), dan `local.properties`/JDK 17 untuk build Android ada di CLAUDE.md repo Android.
+
 ## Tentang project
 
 Aplikasi web untuk TPQ & Madrasah Diniyah Yayasan Pendidikan Al-Hikmah:
@@ -22,7 +51,7 @@ Dokumen konsep (kurikulum, proposal donatur) ada di repo terpisah: [yayasanpendi
 - MySQL — reuse container `shared-mysql` di VPS yang sama dengan rizqflow/habitflow (lihat `C:\Project\personal\build-server`), buat database baru khusus project ini (misal `tpq_alhikmah`), bukan numpang di database app lain.
 - NextAuth/Auth.js v5 (beta) untuk login TU (single user via tabel `TU`, bukan multi-role). Session strategy JWT, tanpa adapter database (tidak perlu — Credentials provider + JWT sudah cukup untuk 1 user).
 - UI admin: mobile-first (TU input data dari HP).
-- Deploy: Docker container di VPS `103.54.170.198`. Selama development diakses via IP:port langsung; domain terpisah menyusul kemudian (belum diputuskan).
+- Deploy: Docker container di VPS `103.54.170.198`. Selama development diakses via IP:port langsung; subdomain sementara `tpq-alhikmah.roziqrizal.com` disiapkan (menunggu DNS, lihat bagian Deploy); domain permanen belum diputuskan.
 
 ## Deploy (Tahap 6, live sejak 2026-10-27)
 
