@@ -12,13 +12,13 @@ _Diperbarui 31 Oktober 2026. Potret keadaan **sekarang**, bukan log: ubah di tem
 
 ### Sudah selesai
 - **Tahap 1, nginx+HTTPS di VPS:** site `tpq-alhikmah.roziqrizal.com` terpasang & diverifikasi lewat `curl --resolve`; **belum aktif dari luar** (record DNS Cloudflare belum ditambah user). Rincian di bagian Deploy.
-- **Tahap 2, backend multi-role + API v1:** di-commit & di-push (terakhir `b1e81e8`), dites lokal. **Belum di-deploy**: yang live di `http://103.54.170.198:8083` masih versi single-TU sebelum tahap 2.
+- **Tahap 2, backend multi-role + API v1:** **sudah di-deploy ke VPS 2026-10-31** (kode `3d9e88e`; backup DB pra-migrasi di `~/backups/tpq_alhikmah-pra-tahap2-20261031-051110.sql` di VPS; migrasi `multi_role_akun` terapan, akun TU lama utuh; seed ADMIN `admin` jalan, password acak ada di `.env.production`). Login ADMIN + `/me` terverifikasi lewat `http://103.54.170.198:8083/api/v1`. Port 8083 sengaja **masih terbuka** (DNS belum aktif, menutupnya memutus akses).
 - **Tahap 3, app Android v1:** selesai & lulus unit test, tapi hanya commit lokal di PC utama (**belum ada remote git**) dan belum pernah dijalankan di emulator/HP. Status rinci: `CLAUDE.md` repo Android.
 
 ### Belum selesai / berikutnya
 1. **DNS Cloudflare** (user): A `tpq-alhikmah` -> `103.54.170.198`, Proxied; SSL Full (strict). Lalu verifikasi `https://tpq-alhikmah.roziqrizal.com`.
-2. **Akun ADMIN pertama:** user menentukan username+password (masuk `.env.production` VPS sebagai `ADMIN_USERNAME`/`ADMIN_PASSWORD`, jangan ke repo).
-3. **Deploy tahap 2** setelah DNS terverifikasi, urutan di bagian "Multi-role & API v1". Ikutkan penutupan port publik 8083 (`127.0.0.1:8083:3000`) di redeploy yang sama, sekaligus menutup celah rate limit via IP:port. Perlu persetujuan user sebelum menyentuh VPS/DB produksi.
+2. **Ganti password ADMIN sementara:** akun `admin` dibuat dengan password acak (di `.env.production` VPS); user sebaiknya menggantinya lewat `/admin/akun` atau mengisi ulang env + `npx tsx prisma/seed.ts`.
+3. **Tutup port publik 8083** (`127.0.0.1:8083:3000`) di redeploy setelah DNS terverifikasi, sekaligus menutup celah rate limit via IP:port (deploy tahap 2 sendiri sudah selesai).
 4. **Uji end-to-end:** backend + Android di emulator, tiap role (ADMIN/TU, PENGAWAS, PIKET, USTADZ, WALI), lalu rapikan temuan (tampilan, ikon launcher beresolusi rendah).
 5. **Push repo Android ke remote** (user perlu memutuskan; tanpa itu repo hanya ada di satu PC).
 6. **Rilis Play Store:** akun developer pribadi (user daftar sendiri), halaman kebijakan privasi di web, formulir data safety, keystore & signing, closed testing (akun pribadi baru biasanya wajib ~12 tester selama ~14 hari: **cek aturan terbaru** sebelum menjanjikan jadwal).
