@@ -14,6 +14,7 @@ import {
   keDate,
   putAbsensiSantriSchema,
 } from "@/lib/api/validasi";
+import { hariBelajar, PESAN_LIBUR } from "@/lib/jadwal";
 
 /** Batas jumlah entri per permintaan mode riwayat santri (cukup untuk >1 tahun). */
 const BATAS_RIWAYAT = 400;
@@ -66,6 +67,8 @@ export const PUT = terautentikasi(async (req, _ctx, actor) => {
     req,
     putAbsensiSantriSchema,
   );
+  // Hari libur ditolak setelah bentuk body valid, sebelum cek santri/kepemilikan entri.
+  if (!hariBelajar(tanggalStr)) throw new ApiError("VALIDATION", PESAN_LIBUR);
   const tanggal = keDate(tanggalStr);
 
   const santri = await prisma.santri.findUnique({ where: { id: santriId }, select: { id: true } });

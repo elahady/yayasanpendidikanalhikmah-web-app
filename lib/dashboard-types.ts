@@ -94,6 +94,8 @@ export type DashboardAnak = {
 export type DashboardDto = {
   /** YYYY-MM-DD (Asia/Jakarta) */
   tanggal: string;
+  /** false bila `tanggal` Sabtu/Minggu (libur); lihat lib/jadwal.ts */
+  hariBelajar: boolean;
   ringkasan: DashboardRingkasan | null;
   anak: DashboardAnak[] | null;
 };

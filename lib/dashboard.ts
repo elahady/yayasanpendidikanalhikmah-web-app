@@ -5,6 +5,7 @@ import {
   punyaRole,
   type Actor,
 } from "@/lib/authz";
+import { hariBelajar as adalahHariBelajar } from "@/lib/jadwal";
 import { prisma } from "@/lib/prisma";
 import { keDate, keTanggalStr, tanggalSchema } from "@/lib/api/validasi";
 import { santriJson } from "@/lib/api/serialisasi";
@@ -60,10 +61,13 @@ function ringkasNama(nama: string[], jumlah: number): string {
 function hitungKehadiran(
   total: number,
   baris: { hadir: boolean; _count: { _all: number } }[],
+  belajar: boolean,
 ): KehadiranHitung {
   const hadir = baris.find((b) => b.hadir)?._count._all ?? 0;
   const tidakHadir = baris.find((b) => !b.hadir)?._count._all ?? 0;
-  return { total, hadir, tidakHadir, belumDicatat: Math.max(total - hadir - tidakHadir, 0) };
+  // Hari libur: tidak ada yang "belum dicatat". Entri lama pada hari libur tetap dihitung apa adanya.
+  const belumDicatat = belajar ? Math.max(total - hadir - tidakHadir, 0) : 0;
+  return { total, hadir, tidakHadir, belumDicatat };
 }
 
 export async function muatDashboard(actor: Actor, tanggal?: string): Promise<DashboardDto> {
@@ -75,7 +79,7 @@ export async function muatDashboard(actor: Actor, tanggal?: string): Promise<Das
     punyaRole(actor, "WALI") ? muatAnak(actor, tgl) : Promise.resolve(null),
   ]);
 
-  return { tanggal: tgl, ringkasan, anak };
+  return { tanggal: tgl, hariBelajar: adalahHariBelajar(tgl), ringkasan, anak };
 }
 
 // ---------------------------------------------------------------------------
@@ -84,6 +88,8 @@ export async function muatDashboard(actor: Actor, tanggal?: string): Promise<Das
 
 async function muatRingkasan(actor: Actor, tgl: string): Promise<DashboardRingkasan> {
   const hari = keDate(tgl);
+  // Hari libur (Sabtu/Minggu) tidak dihitung "belum dicatat" (lib/jadwal.ts).
+  const belajar = adalahHariBelajar(tgl);
   // Nama santri & aktivitas absensi santri: hanya yang boleh melihat SEMUA absensi santri
   // (PIKET murni tidak; WALI+PIKET juga tidak, supaya nama santri lain tak bocor ke wali).
   const bolehNamaSantri = bisaLihatSemuaAbsensiSantri(actor);
@@ -125,10 +131,10 @@ async function muatRingkasan(actor: Actor, tgl: string): Promise<DashboardRingka
       orderBy: { tanggal: "desc" },
       take: MAKS_HARI_TREN,
     }),
-    bolehNamaSantri
+    bolehNamaSantri && belajar
       ? prisma.santri.count({ where: { absensi: { none: { tanggal: hari } } } })
       : Promise.resolve(0),
-    bolehNamaSantri
+    bolehNamaSantri && belajar
       ? prisma.santri.findMany({
           where: { absensi: { none: { tanggal: hari } } },
           orderBy: { nama: "asc" },
@@ -136,13 +142,17 @@ async function muatRingkasan(actor: Actor, tgl: string): Promise<DashboardRingka
           select: { nama: true },
         })
       : Promise.resolve([]),
-    prisma.ustadz.count({ where: { absensi: { none: { tanggal: hari } } } }),
-    prisma.ustadz.findMany({
-      where: { absensi: { none: { tanggal: hari } } },
-      orderBy: { nama: "asc" },
-      take: MAKS_NAMA,
-      select: { nama: true },
-    }),
+    belajar
+      ? prisma.ustadz.count({ where: { absensi: { none: { tanggal: hari } } } })
+      : Promise.resolve(0),
+    belajar
+      ? prisma.ustadz.findMany({
+          where: { absensi: { none: { tanggal: hari } } },
+          orderBy: { nama: "asc" },
+          take: MAKS_NAMA,
+          select: { nama: true },
+        })
+      : Promise.resolve([]),
     prisma.santri.count({
       where: { jilidSaatIni: { not: "AL_QURAN" }, updatedAt: { lt: batasProgress } },
     }),
@@ -166,12 +176,12 @@ async function muatRingkasan(actor: Actor, tgl: string): Promise<DashboardRingka
   const totalSantri = JENJANG.reduce((jml, j) => jml + perJenjang[j], 0);
 
   const santri: DashboardSantri = {
-    ...hitungKehadiran(totalSantri, absSantriHariIni),
+    ...hitungKehadiran(totalSantri, absSantriHariIni, belajar),
     perJenjang,
     perJilid,
   };
   const ustadz: DashboardUstadz = {
-    ...hitungKehadiran(daftarUstadzRaw.length, absUstadzHariIni),
+    ...hitungKehadiran(daftarUstadzRaw.length, absUstadzHariIni, belajar),
     daftar: daftarUstadzRaw.map((u) => ({
       id: u.id,
       nama: u.nama,
@@ -343,9 +353,10 @@ async function muatAnak(actor: Actor, tgl: string): Promise<DashboardAnak[]> {
   ]);
   if (anak.length === 0) return [];
 
-  // Hari belajar = ada >=1 entri absensi santri di mana pun; `tanggal` sendiri selalu ikut.
+  // Hari belajar = ada >=1 entri absensi santri di mana pun; `tanggal` yang diminta ikut hanya
+  // bila hari belajar (Senin-Jumat). Entri lama pada hari libur tetap tampil apa adanya.
   const hariBelajar = new Set(hariBelajarRaw.map((h) => keTanggalStr(h.tanggal)));
-  hariBelajar.add(tgl);
+  if (adalahHariBelajar(tgl)) hariBelajar.add(tgl);
   const daftarHari = [...hariBelajar].sort();
 
   const entri = await prisma.absensiSantri.findMany({

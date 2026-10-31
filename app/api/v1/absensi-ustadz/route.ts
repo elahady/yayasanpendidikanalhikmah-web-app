@@ -9,6 +9,7 @@ import { ApiError } from "@/lib/api/errors";
 import { adalahBentrokUnik, bacaBody, bacaQuery, terautentikasi } from "@/lib/api/handler";
 import { absensiUstadzJson, sertakanPencatat } from "@/lib/api/serialisasi";
 import { absensiUstadzQuerySchema, keDate, putAbsensiUstadzSchema } from "@/lib/api/validasi";
+import { hariBelajar, PESAN_LIBUR } from "@/lib/jadwal";
 
 export const GET = terautentikasi(async (req, _ctx, actor) => {
   wajibLihatDataStaf(actor);
@@ -28,6 +29,8 @@ export const PUT = terautentikasi(async (req, _ctx, actor) => {
     req,
     putAbsensiUstadzSchema,
   );
+  // Hari libur ditolak setelah bentuk body valid, sebelum cek self-attendance/kepemilikan entri.
+  if (!hariBelajar(tanggalStr)) throw new ApiError("VALIDATION", PESAN_LIBUR);
   const tanggal = keDate(tanggalStr);
 
   // Self-attendance dicek sebelum apa pun: akun yang tertaut ke ustadz X tidak
