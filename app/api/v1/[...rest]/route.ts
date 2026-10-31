@@ -2,7 +2,7 @@ import { ApiError } from "@/lib/api/errors";
 import { publik } from "@/lib/api/handler";
 
 // Rute /api/v1/* yang tidak dikenal: balas JSON error seragam (bukan halaman HTML 404).
-const tidakDitemukan = publik(async () => {
+const tidakDitemukan = publik<{ rest: string[] }>(async () => {
   throw new ApiError("NOT_FOUND", "Endpoint tidak ditemukan.");
 });
 

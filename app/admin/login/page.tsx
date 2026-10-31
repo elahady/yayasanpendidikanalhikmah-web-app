@@ -42,7 +42,9 @@ export default async function LoginPage({
             });
           } catch (err) {
             if (err instanceof AuthError) {
-              redirect("/admin/login?error=1");
+              // CredentialsSignin membawa `code` (credentials | role | nonaktif | dibatasi).
+              const code = (err as { code?: unknown }).code;
+              redirect(`/admin/login?error=1&code=${typeof code === "string" ? encodeURIComponent(code) : "credentials"}`);
             }
             throw err;
           }

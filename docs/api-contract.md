@@ -7,8 +7,8 @@ Acuan bersama untuk backend (Next.js, `app/api/v1/`) dan app Android. Kalau ada 
 - Auth: `Authorization: Bearer <accessToken>` di semua endpoint kecuali login.
 - Token: JWT, masa berlaku 30 hari, **tanpa refresh token** (TPQ kecil, jangan ribet). `401` → app kembali ke layar login.
 - Error seragam: HTTP status yang sesuai + body `{ "error": { "code": "KODE", "message": "teks Indonesia" } }`.
-  Kode: `UNAUTHENTICATED` (401), `FORBIDDEN` (403), `SELF_ATTENDANCE_FORBIDDEN` (403), `NOT_FOUND` (404), `VALIDATION` (422), `RATE_LIMITED` (429).
-- Login dibatasi percobaan (rate limit sederhana per username+IP).
+  Kode: `UNAUTHENTICATED` (401), `FORBIDDEN` (403), `SELF_ATTENDANCE_FORBIDDEN` (403), `NOT_FOUND` (404), `VALIDATION` (422), `RATE_LIMITED` (429), `INTERNAL` (500, kesalahan server tak terduga).
+- Login dibatasi percobaan (rate limit sederhana per username+IP): 5 percobaan gagal / 15 menit, juga batas 20 gagal / 15 menit per username. Terlewati -> `429 RATE_LIMITED` + header `Retry-After` (detik).
 
 ## Role
 
@@ -80,3 +80,17 @@ Untuk pantauan harian pengawas.
 ```json
 { "tanggal": "2026-11-02", "santri": { "hadir": 40, "total": 45, "belumDicatat": 2 }, "ustadz": { "hadir": 5, "total": 6, "belumDicatat": 0 } }
 ```
+
+## Catatan implementasi (disepakati saat membangun backend)
+
+Perilaku yang belum eksplisit di atas, sekarang ditetapkan (backend = sumber kebenaran):
+
+- Role dan status aktif akun dibaca ulang dari database di **setiap request**: akun yang dinonaktifkan langsung `401 UNAUTHENTICATED` walau tokennya belum kedaluwarsa; perubahan role langsung berlaku.
+- `POST /auth/login`: username/password salah -> `401 UNAUTHENTICATED`; password benar tapi akun dinonaktifkan -> `403 FORBIDDEN` (bukan 401, supaya app menampilkan pesan, tidak sekadar kembali ke layar login).
+- Matriks dipertegas: PIKET **tidak** boleh `GET /absensi-santri` (`403 FORBIDDEN`); `GET /rekap`, `GET /ustadz`, `GET /absensi-ustadz` terbuka untuk semua role kecuali WALI. Akun dengan beberapa role mendapat gabungan hak semua rolenya (WALI+USTADZ melihat semua santri, bukan hanya anaknya).
+- `GET /absensi-santri` mode tanggal untuk WALI: hanya entri santri anaknya. Mode santri untuk santri yang bukan anaknya -> `403 FORBIDDEN` (id yang tidak ada pun dijawab 403 untuk WALI, supaya tidak membocorkan keberadaan data). Untuk role lain, id yang tidak ada -> `404 NOT_FOUND`. Mode santri dibatasi 400 entri terbaru; `dari`/`sampai` opsional. Wajib tepat satu mode (`tanggal` ATAU `santriId`), selain itu `422`.
+- `PUT` absensi: `dicatatOleh` / pencatat entri = **akun terakhir yang menyimpannya** (jika ADMIN/TU mengubah entri ustadz, entri itu menjadi milik ADMIN/TU dan pencatat awal tidak bisa mengubahnya lagi). Entri lama dari sebelum fitur multi-role punya `dicatatOleh: null` dan hanya bisa diubah ADMIN/TU. `keterangan` yang dikosongkan/dihilangkan menjadi `null` (PUT = ganti penuh).
+- Urutan pengecekan `PUT /absensi-ustadz`: role (`FORBIDDEN`) -> self-attendance (`SELF_ATTENDANCE_FORBIDDEN`) -> data ada (`NOT_FOUND`) -> kepemilikan entri (`FORBIDDEN`). `bisaDiubah` sudah memperhitungkan semuanya.
+- Validasi: `tanggal` harus tanggal kalender yang valid (`2026-02-31` ditolak); `keterangan` maks 191 karakter; `catatanProgressMadin` maks 5000 karakter; `PATCH progress` tanpa field apa pun -> `422`. Body bukan JSON -> `422 VALIDATION`.
+- Endpoint `/api/v1/*` yang tidak ada -> `404 NOT_FOUND` berformat JSON yang sama.
+- Token HS256, `sub` = id akun; ganti password tidak membatalkan token yang sudah terbit (hanya menonaktifkan akun yang langsung efektif).
