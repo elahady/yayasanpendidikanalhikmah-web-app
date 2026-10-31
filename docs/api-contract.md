@@ -34,11 +34,23 @@ Aturan khusus:
 ### `POST /auth/login`
 Body `{ "username": "...", "password": "..." }` →
 ```json
-{ "accessToken": "jwt", "user": { "id": "...", "nama": "...", "roles": ["PIKET","USTADZ"], "ustadzId": "..."|null } }
+{ "accessToken": "jwt", "user": { ...objek user, lihat GET /me } }
 ```
 
 ### `GET /me`
-→ objek `user` seperti di atas (untuk cek sesi saat app dibuka).
+→ objek `user` (untuk cek sesi saat app dibuka, dan layar Profil):
+```json
+{ "id": "...", "username": "hasan", "nama": "Ust. Hasan", "roles": ["PIKET","USTADZ"],
+  "ustadzId": "..."|null, "ustadzNama": "..."|null, "dibuatPada": "2026-10-27T03:12:00.000Z" }
+```
+`username`, `ustadzNama`, `dibuatPada` ditambahkan 2026-10-31 (klien lama yang tidak membacanya tetap jalan; klien baru menganggapnya opsional).
+
+### `POST /me/password` — semua role
+Ubah password akun sendiri. Body `{ "passwordLama": "...", "passwordBaru": "..." }` → `200 { "ok": true }`.
+- `passwordBaru` 8–72 karakter dan berbeda dari `passwordLama`, selain itu `422 VALIDATION` (pesan Indonesia dari server).
+- `passwordLama` salah → `422 VALIDATION` "Password sekarang salah." (**bukan 401**, supaya app tidak mengira sesi habis dan melempar ke layar login).
+- Dibatasi: 5 salah / 15 menit per akun → `429 RATE_LIMITED` + `Retry-After`.
+- Token yang sudah terbit tetap berlaku (lihat catatan implementasi).
 
 ### `GET /santri?q=`
 Daftar santri (WALI: hanya anaknya). `q` mencari nama.
@@ -81,6 +93,52 @@ Untuk pantauan harian pengawas.
 { "tanggal": "2026-11-02", "santri": { "hadir": 40, "total": 45, "belumDicatat": 2 }, "ustadz": { "hadir": 5, "total": 6, "belumDicatat": 0 } }
 ```
 
+### `GET /dashboard?tanggal=YYYY-MM-DD` — semua role
+Bahan layar Beranda. `tanggal` opsional (bawaan: hari ini, Asia/Jakarta). Bentuk:
+```json
+{ "tanggal": "2026-10-31",
+  "ringkasan": { ... } | null,
+  "anak": [ ... ] | null }
+```
+- `ringkasan` terisi bila akun punya setidaknya satu role selain WALI; `null` untuk akun WALI murni.
+- `anak` terisi bila akun punya role WALI (daftar anaknya, boleh kosong); `null` bila tidak.
+- Akun WALI+USTADZ mendapat keduanya.
+
+**`ringkasan`**
+```json
+{ "santri": { "total": 86, "hadir": 71, "tidakHadir": 9, "belumDicatat": 6,
+              "perJenjang": { "ULA": 61, "WUSTHO": 25 },
+              "perJilid": { "PRA_NAHDLIYAH": 9, "JILID_1": 14, "JILID_2": 17, "JILID_3": 12,
+                            "JILID_4": 10, "JILID_5": 7, "JILID_6": 5, "AL_QURAN": 12 } },
+  "ustadz": { "total": 9, "hadir": 7, "tidakHadir": 1, "belumDicatat": 1 },
+  "tren": [ { "tanggal": "2026-10-18", "hadir": 76, "tercatat": 86 } ],
+  "perhatian": [ { "kode": "SANTRI_BELUM_DICATAT", "jumlah": 6, "judul": "6 santri belum dicatat absensinya",
+                   "keterangan": "Aisyah, Fadhil, Rafi dan 3 lainnya", "aksi": "ABSENSI_SANTRI" } ],
+  "aktivitas": [ { "waktu": "2026-10-31T01:12:00.000Z", "oleh": "Ust. Hasan", "jenis": "ABSENSI_SANTRI",
+                   "ringkas": "Ust. Hasan mencatat absensi santri (12 santri)" } ] }
+```
+- `santri.*` dan `ustadz.*` sama sumbernya dengan `/rekap` (jadi terbuka untuk semua role non-WALI, termasuk PIKET); `tidakHadir` = entri `hadir=false`; `belumDicatat` = total − hadir − tidakHadir. `perJenjang`/`perJilid` mencakup semua santri; semua kunci enum selalu ada (nilai 0 bila kosong).
+- `tren`: hingga 14 **hari belajar** terakhir sampai `tanggal` (urut naik). Hari belajar = tanggal yang punya ≥1 entri absensi santri; `tanggal` yang diminta ikut disertakan bila sudah punya entri. `tercatat` = jumlah entri (hadir + tidak hadir) hari itu. Kosong bila belum ada data.
+- `perhatian` (urut seperti tabel; item yang jumlahnya 0 tidak dikirim). `judul` dan `keterangan` dirakit server (Indonesia) agar teks web dan Android sama; `keterangan` memuat sampai 3 nama lalu "dan N lainnya". `aksi` ∈ `ABSENSI_SANTRI` | `ABSENSI_USTADZ` | `DAFTAR_SANTRI` (klien menyembunyikan tombol bila menu itu tidak ada untuk rolenya).
+
+| kode | Arti | Dikirim ke |
+|---|---|---|
+| `SANTRI_BELUM_DICATAT` | santri tanpa entri absensi pada `tanggal` (>0) | role yang boleh melihat absensi santri (bukan PIKET murni) |
+| `SANTRI_ABSEN_BERUNTUN` | santri tidak hadir pada 3 hari belajar terakhir berturut-turut (sampai `tanggal`) | idem |
+| `USTADZ_BELUM_DICATAT` | ustadz tanpa entri pada `tanggal` (>0) | semua non-WALI |
+| `PROGRESS_LAMA` | santri non-`AL_QURAN` yang `updatedAt`-nya lebih dari 60 hari lalu (pendekatan: `updatedAt` ikut berubah pada edit apa pun) | semua non-WALI |
+
+- `aktivitas`: maks 6 entri, 7 hari terakhir, dari entri absensi dengan `dicatatOleh` terisi, dikelompokkan per (pencatat, jenis, tanggal); `waktu` = `createdAt` terbaru di kelompok. `jenis` ∈ `ABSENSI_SANTRI` | `ABSENSI_USTADZ`. Entri `ABSENSI_SANTRI` hanya untuk role yang boleh melihat absensi santri. (Perubahan progress tidak punya riwayat, jadi tidak ada di sini.)
+
+**`anak[]`** (satu elemen per anak dari relasi wali):
+```json
+{ "santri": { "id": "...", "nama": "...", "jenjang": "ULA", "kelas": "2", "jilidSaatIni": "JILID_3", "catatanProgressMadin": "..."|null },
+  "diperbaruiPada": "2026-10-29T09:20:00.000Z",
+  "kehadiran": { "hadir": 27, "tidakHadir": 2, "belumDicatat": 1,
+                 "hari": [ { "tanggal": "2026-10-03", "status": "HADIR" } ] } }
+```
+`kehadiran.hari`: 30 tanggal kalender terakhir sampai `tanggal`, **hanya hari belajar** (punya ≥1 entri absensi santri di mana pun; `tanggal` sendiri selalu ikut), urut naik. `status` ∈ `HADIR` | `TIDAK_HADIR` | `BELUM_DICATAT` (belum ada entri untuk anak itu pada hari belajar tsb). Tiga angka di atasnya = hitungan dari `hari`.
+
 ## Catatan implementasi (disepakati saat membangun backend)
 
 Perilaku yang belum eksplisit di atas, sekarang ditetapkan (backend = sumber kebenaran):
@@ -94,3 +152,5 @@ Perilaku yang belum eksplisit di atas, sekarang ditetapkan (backend = sumber keb
 - Validasi: `tanggal` harus tanggal kalender yang valid (`2026-02-31` ditolak); `keterangan` maks 191 karakter; `catatanProgressMadin` maks 5000 karakter; `PATCH progress` tanpa field apa pun -> `422`. Body bukan JSON -> `422 VALIDATION`.
 - Endpoint `/api/v1/*` yang tidak ada -> `404 NOT_FOUND` berformat JSON yang sama.
 - Token HS256, `sub` = id akun; ganti password tidak membatalkan token yang sudah terbit (hanya menonaktifkan akun yang langsung efektif).
+- `POST /me/password` mengganti hash di tabel `Akun`; token API lama tetap berlaku sampai kedaluwarsa (konsisten dengan catatan di atas). Batas percobaan salah memakai `lib/rate-limit.ts` dengan kunci per akun.
+- `GET /dashboard` dihitung di server dari data yang sudah ada (tanpa tabel baru). Hak lihat mengikuti `lib/authz.ts`; angka agregat boleh dilihat semua non-WALI karena sama dengan `/rekap`, sedangkan nama santri (perhatian/aktivitas absensi santri) hanya untuk yang boleh melihat absensi santri.
