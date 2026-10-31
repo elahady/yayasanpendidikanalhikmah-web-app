@@ -26,17 +26,24 @@ Dokumen konsep (kurikulum, proposal donatur) ada di repo terpisah: [yayasanpendi
 
 ## Deploy (Tahap 6, live sejak 2026-10-27)
 
-**Live di** `http://103.54.170.198:8083` (akses langsung via IP:port, belum ada domain).
+**Live di** `http://103.54.170.198:8083` (akses langsung via IP:port, HTTP polos — masih hidup) dan, begitu DNS aktif, `https://tpq-alhikmah.roziqrizal.com`.
 
-> ⚠️ **BELUM ADA HTTPS/SSL.** Akses masih HTTP polos — login TU (username+password) dikirim dalam
-> bentuk teks polos, bisa disadap di jaringan yang sama (misal WiFi publik). **Jangan dipakai TU
-> untuk input data harian sungguhan sampai ini dibereskan.** Keputusan 2026-10-27: domain
-> ditunda (belum diputuskan domainnya apa), jadi untuk sementara tetap HTTP — pasang HTTPS begitu
-> domain sudah ada (tinggal arahkan DNS ke Cloudflare + copy pola nginx+SSL dari
-> `/etc/nginx/sites-available/rizqflow.roziqrizal.com` di VPS, sudah ada sertifikat Cloudflare
-> Origin terpasang di `/etc/nginx/ssl/`).
+**Status HTTPS (2026-10-31):** nginx di VPS **sudah siap** untuk subdomain sementara `tpq-alhikmah.roziqrizal.com` (tanpa beli domain baru, lewat Cloudflare), tapi **menunggu record DNS** dari user. Keputusan: subdomain sementara dulu, domain sendiri menyusul kalau perlu.
 
-- Lokasi di VPS: `~/apps/yayasanpendidikanalhikmah-web-app` (git clone biasa dari repo ini, SSH: `ssh -i ~/.ssh/id_ed25519_vps_jakarta elahady@103.54.170.198`).
+- Config: `/etc/nginx/sites-available/tpq-alhikmah.roziqrizal.com` (+ symlink di `sites-enabled`), pola sama dengan rizqflow: port 80 redirect 301 ke HTTPS, port 443 pakai sertifikat Cloudflare Origin `/etc/nginx/ssl/cloudflare-origin.pem|.key`, reverse proxy ke `http://127.0.0.1:8083` dengan header `Host`, `X-Real-IP`, `X-Forwarded-For`, `X-Forwarded-Proto`.
+- Sertifikat Origin tsb. SAN-nya `*.roziqrizal.com` + `roziqrizal.com`, berlaku s/d 2041-10-14 → **valid untuk subdomain ini**, jadi mode SSL Cloudflare boleh **Full (strict)**.
+- Terverifikasi tanpa DNS (2026-10-31, `curl -k --resolve tpq-alhikmah.roziqrizal.com:443:103.54.170.198`): `/` → 200, `/admin/login` → 200, `/api/auth/csrf` → 200; `http://` → 301 ke HTTPS; `nginx -t` bersih; rizqflow/habitflow/roziqrizal.com respons tidak berubah (302/302/200). **Belum diverifikasi** lewat DNS/Cloudflare sungguhan (karena record belum ada).
+
+> ⚠️ **Belum dianggap aman sampai DNS aktif & diverifikasi.** Selama itu, akses lewat `http://103.54.170.198:8083` masih HTTP polos — login TU (username+password) terkirim sebagai teks polos. **Jangan dipakai TU untuk input data harian sungguhan lewat IP:port**; tunggu `https://tpq-alhikmah.roziqrizal.com` jalan.
+
+**Langkah untuk user (Cloudflare, zona `roziqrizal.com`):**
+1. DNS → Add record: Type `A`, Name `tpq-alhikmah`, IPv4 `103.54.170.198`, Proxy status **Proxied (awan oranye)**, TTL Auto.
+2. SSL/TLS → Overview → mode **Full (strict)** (sertifikat Origin valid untuk subdomain ini). Kalau zona sudah di Full (strict) untuk rizqflow/habitflow, tidak perlu diubah.
+3. Tes `https://tpq-alhikmah.roziqrizal.com` dan login `/admin/login` dari HP.
+
+**Tindak lanjut setelah DNS terverifikasi:** ubah port di `docker-compose.yml` dari `0.0.0.0:8083:3000` jadi `127.0.0.1:8083:3000` (tutup akses langsung IP:port, sama seperti rizqflow), lalu redeploy. Setelah itu baru tinjau `trustHost` di `auth.ts` dan perbarui kalimat "akses langsung IP:port" di dokumen ini.
+
+- Lokasi di VPS: `~/apps/yayasanpendidikanalhikmah-web-app` (git clone biasa dari repo ini, SSH: `ssh -i ~/.ssh/id_ed25519_vps_jakarta elahady@103.54.170.198`). Catatan SSH: tiap PC boleh punya kunci sendiri bernama `id_ed25519_vps_jakarta` (kuncinya beda per PC, bukan file yang disalin); PC utama user sekarang memakai kunci berlabel `pc-roziq` yang sudah terdaftar di `authorized_keys` VPS sejak 2026-10-31. Kunci privat tidak pernah disimpan di repo.
 - `Dockerfile` — single-stage, `node:22-bookworm-slim` (bukan Alpine, biar Prisma generate engine yang cocok tanpa config `binaryTargets` tambahan), install `openssl` eksplisit (tanpa ini Prisma warning "failed to detect libssl version"), full `node_modules` disertakan (bukan `output: "standalone"` — disengaja, lebih simpel & disk VPS longgar (47GB free), standalone+Prisma CLI untuk migrasi lebih ribet untuk app sekecil ini).
 - `docker-compose.yml` — **`name:` wajib eksplisit** (pelajaran dari rizqflow: folder bernama "server" di app lain sempat bentrok/menimpa container app lain karena nama project default ikut nama folder). Port `0.0.0.0:8083:3000` (bukan `127.0.0.1` seperti rizqflow — app itu sengaja hanya lewat nginx+domain, app ini sengaja akses langsung IP:port). Network `shared-db` (external) untuk konek ke `shared-mysql`.
 - `auth.ts` — **`trustHost: true` wajib** selama akses via IP:port (NextAuth menolak request dengan error `UntrustedHost` tanpa ini). Tinjau ulang kalau nanti pindah ke domain tetap (boleh dipertahankan, tidak masalah selama traffic publik tetap lewat HTTPS Cloudflare).
