@@ -1,3 +1,4 @@
+import { wajibAdminHalaman } from "@/lib/web-auth";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -14,6 +15,7 @@ export default async function EditUstadzPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ error?: string }>;
 }) {
+  await wajibAdminHalaman();
   const { id } = await params;
   const { error } = await searchParams;
 

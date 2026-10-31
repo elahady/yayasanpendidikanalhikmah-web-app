@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { auth } from "@/auth";
+import { getWebActor } from "@/lib/web-auth";
 import { prisma } from "@/lib/prisma";
 import { JILID_ORDER } from "@/lib/labels";
 
@@ -11,8 +11,7 @@ import { JILID_ORDER } from "@/lib/labels";
  * bebas progress Madrasah Diniyah.
  */
 export async function updateProgressSantri(formData: FormData): Promise<void> {
-  const session = await auth();
-  if (!session) {
+  if (!(await getWebActor())) {
     redirect("/admin/login");
   }
 

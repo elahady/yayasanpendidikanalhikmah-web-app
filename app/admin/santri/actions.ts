@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
+import { wajibAdminAction } from "@/lib/web-auth";
 
 const LIST_PATH = "/admin/santri";
 
@@ -14,11 +14,10 @@ const santriSchema = z.object({
   kelas: z.string().trim().min(1, "Kelas wajib diisi."),
 });
 
+// Server action dipanggil langsung dari klien, jadi hak akses WAJIB dicek di sini
+// (ADMIN/TU aktif, dibaca dari database), bukan hanya mengandalkan proxy.ts.
 async function requireSession() {
-  const session = await auth();
-  if (!session?.user) {
-    throw new Error("Tidak diizinkan. Silakan login ulang.");
-  }
+  await wajibAdminAction();
 }
 
 function parseSantriForm(formData: FormData) {

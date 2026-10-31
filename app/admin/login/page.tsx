@@ -3,23 +3,32 @@ import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 import { Logo } from "@/components/logo";
 
+// Pesan per kode penolakan (lihat LoginDitolak di auth.ts dan proxy.ts).
+const PESAN_LOGIN: Record<string, string> = {
+  credentials: "Username atau password salah.",
+  role: "Akun ini tidak punya akses ke panel web. Panel web hanya untuk ADMIN/TU — gunakan aplikasi Android untuk peran Anda.",
+  nonaktif: "Akun ini sudah dinonaktifkan. Hubungi pengurus TPQ.",
+  dibatasi: "Terlalu banyak percobaan login. Tunggu beberapa menit lalu coba lagi.",
+};
+
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; code?: string }>;
 }) {
-  const { error } = await searchParams;
+  const { error, code } = await searchParams;
+  const pesanError = error ? (PESAN_LOGIN[code ?? error] ?? PESAN_LOGIN.credentials) : null;
 
   return (
     <div className="w-full max-w-sm space-y-7 rounded-[24px] border border-border bg-bg-elevated p-8">
       <Logo />
       <div>
-        <h1 className="font-display text-2xl font-semibold text-ink">Login TU</h1>
-        <p className="mt-1 text-sm text-ink-muted">Masuk untuk mengelola data TPQ &amp; Madrasah Diniyah.</p>
+        <h1 className="font-display text-2xl font-semibold text-ink">Login Admin</h1>
+        <p className="mt-1 text-sm text-ink-muted">Khusus ADMIN/TU. Masuk untuk mengelola data TPQ &amp; Madrasah Diniyah.</p>
       </div>
-      {error && (
+      {pesanError && (
         <p className="rounded-lg bg-accent/10 px-3.5 py-2.5 text-sm font-medium text-accent">
-          Username atau password salah.
+          {pesanError}
         </p>
       )}
       <form

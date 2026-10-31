@@ -1,3 +1,4 @@
+import { wajibAdminHalaman } from "@/lib/web-auth";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import {
@@ -12,6 +13,7 @@ export default async function AdminAbsensiUstadzPage({
 }: {
   searchParams: Promise<{ tanggal?: string; tersimpan?: string }>;
 }) {
+  await wajibAdminHalaman();
   const sp = await searchParams;
   const tanggalStr = isValidDateInputValue(sp.tanggal)
     ? sp.tanggal

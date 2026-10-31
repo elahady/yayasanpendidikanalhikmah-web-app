@@ -1,3 +1,4 @@
+import { wajibAdminHalaman } from "@/lib/web-auth";
 import Link from "next/link";
 import type { Santri } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -9,6 +10,7 @@ export default async function AdminProgressPage({
 }: {
   searchParams: Promise<{ santriId?: string; tersimpan?: string }>;
 }) {
+  await wajibAdminHalaman();
   const sp = await searchParams;
 
   const [semuaSantri, distribusiJilid] = await Promise.all([

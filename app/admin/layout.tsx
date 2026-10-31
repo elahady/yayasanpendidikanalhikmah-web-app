@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { auth, signOut } from "@/auth";
+import { signOut } from "@/auth";
+import { getWebActor } from "@/lib/web-auth";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -10,12 +11,16 @@ const navItems = [
   { href: "/admin/absensi-santri", label: "Absensi Santri" },
   { href: "/admin/absensi-ustadz", label: "Absensi Ustadz" },
   { href: "/admin/progress", label: "Progress Santri" },
+  { href: "/admin/akun", label: "Akun" },
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth();
+  // Hanya dipakai untuk menampilkan chrome (nav). Pagar akses sebenarnya ada di
+  // tiap halaman & server action (lib/web-auth.ts), karena layout tidak dirender
+  // ulang saat navigasi antarhalaman.
+  const actor = await getWebActor();
 
-  if (!session) {
+  if (!actor) {
     return <div className="flex flex-1 items-center justify-center bg-bg p-6">{children}</div>;
   }
 
@@ -25,6 +30,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-5 py-3.5">
           <Logo />
           <div className="flex items-center gap-3">
+            <span className="hidden text-sm text-ink-muted sm:inline">{actor.nama}</span>
             <ThemeToggle />
             <form
               action={async () => {

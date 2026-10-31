@@ -1,3 +1,4 @@
+import { wajibAdminHalaman } from "@/lib/web-auth";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { createUstadzAction } from "./actions";
@@ -12,6 +13,7 @@ export default async function AdminUstadzPage({
 }: {
   searchParams: Promise<{ error?: string }>;
 }) {
+  await wajibAdminHalaman();
   const { error } = await searchParams;
 
   const ustadzList = await prisma.ustadz.findMany({

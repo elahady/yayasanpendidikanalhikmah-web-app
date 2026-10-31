@@ -1,3 +1,4 @@
+import { wajibAdminHalaman } from "@/lib/web-auth";
 import Link from "next/link";
 import type { Santri } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -14,6 +15,7 @@ export default async function AdminAbsensiSantriPage({
 }: {
   searchParams: Promise<{ tanggal?: string; tersimpan?: string }>;
 }) {
+  await wajibAdminHalaman();
   const sp = await searchParams;
   const tanggalStr = isValidDateInputValue(sp.tanggal)
     ? sp.tanggal

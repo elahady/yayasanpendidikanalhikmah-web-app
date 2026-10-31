@@ -1,3 +1,4 @@
+import { wajibAdminHalaman } from "@/lib/web-auth";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { createSantriAction } from "./actions";
@@ -28,6 +29,7 @@ export default async function AdminSantriPage({
 }: {
   searchParams: Promise<{ error?: string }>;
 }) {
+  await wajibAdminHalaman();
   const { error } = await searchParams;
 
   const santriList = await prisma.santri.findMany({
