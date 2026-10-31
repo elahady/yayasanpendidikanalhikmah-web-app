@@ -20,7 +20,7 @@ _Diperbarui 31 Oktober 2026. Potret keadaan **sekarang**, bukan log: ubah di tem
 1. **DNS Cloudflare** (user): A `tpq-alhikmah` -> `103.54.170.198`, Proxied; SSL Full (strict). Lalu verifikasi `https://tpq-alhikmah.roziqrizal.com`.
 2. **Password ADMIN produksi masih lemah:** atas permintaan user dibuat mudah diingat (di `.env.production` VPS, bukan di repo). Ganti ke yang kuat sebelum data santri sungguhan dimasukkan (sekarang bisa lewat `/admin/profil` setelah tahap 4 di-deploy).
 3. **Deploy tahap 4** (dashboard/profil/password) ke VPS, setelah persetujuan user: urutan yang sama dengan redeploy biasa (`git pull && docker compose build && docker compose up -d`); tidak ada migrasi baru. Ikutkan penutupan port publik 8083 (`127.0.0.1:8083:3000`) hanya setelah DNS terverifikasi.
-4. **Uji end-to-end per role di emulator** terhadap backend tahap 4 (ADMIN/TU, PENGAWAS, PIKET, USTADZ, WALI), cek visual web (390px + desktop, terang + gelap), ganti tema, form ubah password; lalu rapikan temuan (ikon launcher beresolusi rendah).
+4. **Sisa uji:** emulator sudah diuji untuk ADMIN, PENGAWAS, PIKET+USTADZ, WALI terhadap backend lokal tahap 4 (31 Okt 2026, lulus); belum: PIKET murni, USTADZ murni, simpan password via dialog, cek visual web (390px + desktop, terang + gelap) di browser, ikon launcher beresolusi rendah.
 5. **Rilis Play Store:** akun developer pribadi (user daftar sendiri), halaman kebijakan privasi di web, formulir data safety, keystore & signing, closed testing (akun pribadi baru biasanya wajib ~12 tester selama ~14 hari: **cek aturan terbaru** sebelum menjanjikan jadwal).
 6. Reskin halaman admin lama (santri, ustadz, absensi, progress, akun); notifikasi push + mode offline (versi 2).
 
