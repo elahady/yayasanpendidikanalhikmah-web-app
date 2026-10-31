@@ -1,10 +1,11 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { keUserApi, muatActor } from "@/lib/akun";
+import { muatActor } from "@/lib/akun";
 import { ApiError } from "@/lib/api/errors";
 import { bacaBody, publik } from "@/lib/api/handler";
 import { buatToken } from "@/lib/api/jwt";
 import { loginBodySchema } from "@/lib/api/validasi";
+import { muatProfil } from "@/lib/profil";
 import {
   catatLoginBerhasil,
   catatLoginGagal,
@@ -44,5 +45,5 @@ export const POST = publik(async (req) => {
   const actor = await muatActor(akun.id);
   if (!actor) throw new ApiError("UNAUTHENTICATED", "Akun tidak ditemukan.");
 
-  return Response.json({ accessToken: await buatToken(akun.id), user: keUserApi(actor) });
+  return Response.json({ accessToken: await buatToken(akun.id), user: await muatProfil(actor) });
 });

@@ -8,11 +8,15 @@
  *  - per username    : maks 20 gagal / 15 menit (jaring pengaman kalau penyerang
  *    memalsukan header X-Forwarded-For untuk ganti-ganti IP)
  * Login sukses menghapus hitungan username+IP.
+ *
+ * Ubah password sendiri (`POST /me/password`) memakai penyimpan yang sama dengan
+ * kunci per AKUN: maks 5 password-lama-salah / 15 menit (sukses menghapus hitungan).
  */
 
 const JENDELA_MS = 15 * 60 * 1000;
 const MAKS_PER_USERNAME_IP = 5;
 const MAKS_PER_USERNAME = 20;
+const MAKS_PER_AKUN_PASSWORD = 5;
 const MAKS_ENTRI = 5000;
 
 type Hitungan = { jumlah: number; berakhirPada: number };
@@ -83,6 +87,28 @@ export function catatLoginGagal(username: string, ip: string): void {
 
 export function catatLoginBerhasil(username: string, ip: string): void {
   penyimpan.delete(kunciUserIp(username, ip));
+}
+
+function kunciPassword(akunId: string): string {
+  return `pw|${akunId}`;
+}
+
+/** Sisa detik sampai akun boleh mencoba ganti password lagi, atau 0 kalau belum kena batas. */
+export function detikSampaiBolehGantiPassword(akunId: string): number {
+  const sekarang = Date.now();
+  const h = ambil(kunciPassword(akunId), sekarang);
+  if (h && h.jumlah >= MAKS_PER_AKUN_PASSWORD) return Math.ceil((h.berakhirPada - sekarang) / 1000);
+  return 0;
+}
+
+export function catatPasswordLamaSalah(akunId: string): void {
+  const sekarang = Date.now();
+  bersihkan(sekarang);
+  tambah(kunciPassword(akunId), sekarang);
+}
+
+export function catatGantiPasswordBerhasil(akunId: string): void {
+  penyimpan.delete(kunciPassword(akunId));
 }
 
 /** IP klien dari header proxy; "tidak-diketahui" kalau tidak ada. */

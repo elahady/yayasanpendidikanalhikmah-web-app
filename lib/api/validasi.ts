@@ -81,6 +81,13 @@ export const absensiSantriQuerySchema = z
 
 export const absensiUstadzQuerySchema = z.object({ tanggal: tanggalSchema });
 export const rekapQuerySchema = z.object({ tanggal: tanggalSchema });
+export const dashboardQuerySchema = z.object({ tanggal: tanggalSchema.optional() });
+
+/** Aturan panjang/beda password dicek di lib/password.ts; di sini hanya tipe datanya. */
+export const ubahPasswordBodySchema = z.object({
+  passwordLama: z.string({ error: "passwordLama wajib diisi." }).min(1, "passwordLama wajib diisi."),
+  passwordBaru: z.string({ error: "passwordBaru wajib diisi." }),
+});
 
 export const putAbsensiSantriSchema = z.object({
   santriId: idSchema("santriId"),
