@@ -367,12 +367,15 @@ async function muatAnak(actor: Actor, tgl: string): Promise<DashboardAnak[]> {
   for (const e of entri) status.set(`${e.santriId}|${keTanggalStr(e.tanggal)}`, e.hadir);
 
   return anak.map((s) => {
-    const hariAnak = daftarHari.map((tanggalHari) => {
-      const hadir = status.get(`${s.id}|${tanggalHari}`);
-      const st: StatusHari =
-        hadir === undefined ? "BELUM_DICATAT" : hadir ? "HADIR" : "TIDAK_HADIR";
-      return { tanggal: tanggalHari, status: st };
-    });
+    // Tanggal libur hanya ikut bila anak ini punya entri lama di situ (tidak pernah BELUM_DICATAT).
+    const hariAnak = daftarHari
+      .filter((tanggalHari) => adalahHariBelajar(tanggalHari) || status.has(`${s.id}|${tanggalHari}`))
+      .map((tanggalHari) => {
+        const hadir = status.get(`${s.id}|${tanggalHari}`);
+        const st: StatusHari =
+          hadir === undefined ? "BELUM_DICATAT" : hadir ? "HADIR" : "TIDAK_HADIR";
+        return { tanggal: tanggalHari, status: st };
+      });
     const hitung = (st: StatusHari) => hariAnak.filter((h) => h.status === st).length;
     return {
       santri: santriJson(s),

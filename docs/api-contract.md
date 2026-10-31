@@ -33,7 +33,7 @@ Aturan khusus:
 
 TPQ belajar **Senin–Jumat**; **Sabtu dan Minggu libur**. Dihitung dari tanggal kalender (`YYYY-MM-DD`, Asia/Jakarta), satu aturan di server (`lib/jadwal.ts`) dan salinannya di Android (`Jadwal` di `:domain`).
 - Absensi **tidak boleh dicatat** pada hari libur: `PUT /absensi-santri` dan `PUT /absensi-ustadz` dengan `tanggal` Sabtu/Minggu → `422 VALIDATION` "TPQ libur pada hari Sabtu dan Minggu. Absensi tidak dapat dicatat." Data lama yang sudah terlanjur ada pada hari libur tetap bisa dibaca. Urutan validasi di server: bentuk body -> hari libur -> kepemilikan/self-attendance -> keberadaan santri/ustadz.
-- Hari libur tidak dihitung "belum dicatat": `GET /rekap` dan `GET /dashboard` untuk tanggal libur mengembalikan `hariBelajar: false` dan `belumDicatat: 0`; item perhatian `SANTRI_BELUM_DICATAT` / `USTADZ_BELUM_DICATAT` tidak dikirim; `kehadiran.hari` wali tidak menyertakan tanggal libur sebagai `BELUM_DICATAT`.
+- Hari libur tidak dihitung "belum dicatat": `GET /rekap` dan `GET /dashboard` untuk tanggal libur mengembalikan `hariBelajar: false` dan `belumDicatat: 0`; item perhatian `SANTRI_BELUM_DICATAT` / `USTADZ_BELUM_DICATAT` tidak dikirim; `kehadiran.hari` wali tidak menyertakan tanggal libur sebagai `BELUM_DICATAT` (tanggal libur hanya ikut bila anak itu punya entri lama di situ, apa adanya).
 - Klien menampilkan keadaan "Libur" (bukan kartu kehadiran 0%) dan menonaktifkan input absensi pada tanggal libur.
 - Belum ada kalender libur khusus (libur nasional, cuti bersama): kalau diperlukan nanti, ditambahkan di server (`lib/jadwal.ts`) tanpa mengubah bentuk API.
 
