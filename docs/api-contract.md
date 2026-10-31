@@ -29,6 +29,14 @@ Aturan khusus:
 - Tanpa riwayat perubahan, tanpa alur persetujuan.
 - Kelola akun, CRUD santri/ustadz, dan relasi wali↔santri **hanya di web** (`/admin`, untuk ADMIN/TU), tidak ada di API v1.
 
+## Jadwal (hari belajar) — ditetapkan 2026-10-31
+
+TPQ belajar **Senin–Jumat**; **Sabtu dan Minggu libur**. Dihitung dari tanggal kalender (`YYYY-MM-DD`, Asia/Jakarta), satu aturan di server (`lib/jadwal.ts`) dan salinannya di Android (`Jadwal` di `:domain`).
+- Absensi **tidak boleh dicatat** pada hari libur: `PUT /absensi-santri` dan `PUT /absensi-ustadz` dengan `tanggal` Sabtu/Minggu → `422 VALIDATION` "TPQ libur pada hari Sabtu dan Minggu. Absensi tidak dapat dicatat." Data lama yang sudah terlanjur ada pada hari libur tetap bisa dibaca.
+- Hari libur tidak dihitung "belum dicatat": `GET /rekap` dan `GET /dashboard` untuk tanggal libur mengembalikan `hariBelajar: false` dan `belumDicatat: 0`; item perhatian `SANTRI_BELUM_DICATAT` / `USTADZ_BELUM_DICATAT` tidak dikirim; `kehadiran.hari` wali tidak menyertakan tanggal libur sebagai `BELUM_DICATAT`.
+- Klien menampilkan keadaan "Libur" (bukan kartu kehadiran 0%) dan menonaktifkan input absensi pada tanggal libur.
+- Belum ada kalender libur khusus (libur nasional, cuti bersama): kalau diperlukan nanti, ditambahkan di server (`lib/jadwal.ts`) tanpa mengubah bentuk API.
+
 ## Endpoint
 
 ### `POST /auth/login`
@@ -79,27 +87,31 @@ Mode tanggal: semua entri hari itu. Mode santri: riwayat satu santri (WALI hanya
 `bisaDiubah` dihitung server untuk pemanggil, supaya klien tinggal menonaktifkan tombol.
 
 ### `PUT /absensi-santri` — ADMIN, TU, USTADZ
+(`tanggal` Sabtu/Minggu → `422`, lihat bagian Jadwal.)
 Upsert per (santriId, tanggal). Body `{ "santriId", "tanggal", "hadir", "keterangan"?: string|null }` → satu entri (bentuk di atas).
 
 ### `GET /absensi-ustadz?tanggal=YYYY-MM-DD` — semua role kecuali WALI
 Bentuk sama, dengan `ustadzId` menggantikan `santriId`.
 
 ### `PUT /absensi-ustadz` — ADMIN, TU, PIKET
+(`tanggal` Sabtu/Minggu → `422`, lihat bagian Jadwal.)
 Upsert per (ustadzId, tanggal). Body `{ "ustadzId", "tanggal", "hadir", "keterangan"? }`. Aturan self-attendance di atas berlaku.
 
 ### `GET /rekap?tanggal=YYYY-MM-DD` — semua role kecuali WALI
 Untuk pantauan harian pengawas.
 ```json
-{ "tanggal": "2026-11-02", "santri": { "hadir": 40, "total": 45, "belumDicatat": 2 }, "ustadz": { "hadir": 5, "total": 6, "belumDicatat": 0 } }
+{ "tanggal": "2026-11-02", "hariBelajar": true, "santri": { "hadir": 40, "total": 45, "belumDicatat": 2 }, "ustadz": { "hadir": 5, "total": 6, "belumDicatat": 0 } }
 ```
 
 ### `GET /dashboard?tanggal=YYYY-MM-DD` — semua role
 Bahan layar Beranda. `tanggal` opsional (bawaan: hari ini, Asia/Jakarta). Bentuk:
 ```json
-{ "tanggal": "2026-10-31",
+{ "tanggal": "2026-10-30",
+  "hariBelajar": true,
   "ringkasan": { ... } | null,
   "anak": [ ... ] | null }
 ```
+- `hariBelajar` (ditambahkan 2026-10-31): `false` bila `tanggal` Sabtu/Minggu (lihat bagian Jadwal). Klien lama yang tidak membacanya menganggap `true`.
 - `ringkasan` terisi bila akun punya setidaknya satu role selain WALI; `null` untuk akun WALI murni.
 - `anak` terisi bila akun punya role WALI (daftar anaknya, boleh kosong); `null` bila tidak.
 - Akun WALI+USTADZ mendapat keduanya.
