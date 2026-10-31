@@ -14,6 +14,7 @@ import type {
   DashboardDto,
   DashboardRingkasan,
   DashboardSantri,
+  DashboardUstadz,
   JenjangKode,
   JilidKode,
   KehadiranHitung,
@@ -92,7 +93,7 @@ async function muatRingkasan(actor: Actor, tgl: string): Promise<DashboardRingka
     perJenjangRaw,
     perJilidRaw,
     absSantriHariIni,
-    totalUstadz,
+    daftarUstadzRaw,
     absUstadzHariIni,
     hariBelajarDesc,
     belumSantriJumlah,
@@ -107,7 +108,16 @@ async function muatRingkasan(actor: Actor, tgl: string): Promise<DashboardRingka
     prisma.santri.groupBy({ by: ["jenjang"], _count: { _all: true } }),
     prisma.santri.groupBy({ by: ["jilidSaatIni"], _count: { _all: true } }),
     prisma.absensiSantri.groupBy({ by: ["hadir"], where: { tanggal: hari }, _count: { _all: true } }),
-    prisma.ustadz.count(),
+    // Semua ustadz + status absensi hari itu (satu query); jumlah total diturunkan dari daftar ini.
+    prisma.ustadz.findMany({
+      orderBy: { nama: "asc" },
+      select: {
+        id: true,
+        nama: true,
+        mapelDiajar: true,
+        absensi: { where: { tanggal: hari }, select: { hadir: true }, take: 1 },
+      },
+    }),
     prisma.absensiUstadz.groupBy({ by: ["hadir"], where: { tanggal: hari }, _count: { _all: true } }),
     prisma.absensiSantri.groupBy({
       by: ["tanggal"],
@@ -160,7 +170,15 @@ async function muatRingkasan(actor: Actor, tgl: string): Promise<DashboardRingka
     perJenjang,
     perJilid,
   };
-  const ustadz = hitungKehadiran(totalUstadz, absUstadzHariIni);
+  const ustadz: DashboardUstadz = {
+    ...hitungKehadiran(daftarUstadzRaw.length, absUstadzHariIni),
+    daftar: daftarUstadzRaw.map((u) => ({
+      id: u.id,
+      nama: u.nama,
+      mapelDiajar: u.mapelDiajar,
+      status: u.absensi.length === 0 ? "BELUM_DICATAT" : u.absensi[0].hadir ? "HADIR" : "TIDAK_HADIR",
+    })),
+  };
 
   // --- Tren + santri absen beruntun (butuh daftar hari belajar) ------------
   const hariBelajar = hariBelajarDesc.map((h) => h.tanggal).reverse(); // naik

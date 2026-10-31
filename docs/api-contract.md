@@ -110,7 +110,8 @@ Bahan layar Beranda. `tanggal` opsional (bawaan: hari ini, Asia/Jakarta). Bentuk
               "perJenjang": { "ULA": 61, "WUSTHO": 25 },
               "perJilid": { "PRA_NAHDLIYAH": 9, "JILID_1": 14, "JILID_2": 17, "JILID_3": 12,
                             "JILID_4": 10, "JILID_5": 7, "JILID_6": 5, "AL_QURAN": 12 } },
-  "ustadz": { "total": 9, "hadir": 7, "tidakHadir": 1, "belumDicatat": 1 },
+  "ustadz": { "total": 9, "hadir": 7, "tidakHadir": 1, "belumDicatat": 1,
+              "daftar": [ { "id": "...", "nama": "Ust. Kholil", "mapelDiajar": "Tahfidz", "status": "HADIR" } ] },
   "tren": [ { "tanggal": "2026-10-18", "hadir": 76, "tercatat": 86 } ],
   "perhatian": [ { "kode": "SANTRI_BELUM_DICATAT", "jumlah": 6, "judul": "6 santri belum dicatat absensinya",
                    "keterangan": "Aisyah, Fadhil, Rafi dan 3 lainnya", "aksi": "ABSENSI_SANTRI" } ],
@@ -118,6 +119,7 @@ Bahan layar Beranda. `tanggal` opsional (bawaan: hari ini, Asia/Jakarta). Bentuk
                    "ringkas": "Ust. Hasan mencatat absensi santri (12 santri)" } ] }
 ```
 - `santri.*` dan `ustadz.*` sama sumbernya dengan `/rekap` (jadi terbuka untuk semua role non-WALI, termasuk PIKET); `tidakHadir` = entri `hadir=false`; `belumDicatat` = total − hadir − tidakHadir. `perJenjang`/`perJilid` mencakup semua santri; semua kunci enum selalu ada (nilai 0 bila kosong).
+- `ustadz.daftar` (ditambahkan 2026-10-31): semua ustadz urut nama dengan `status` hari itu (`HADIR` | `TIDAK_HADIR` | `BELUM_DICATAT`). Sumbernya sama dengan `GET /absensi-ustadz` (terbuka untuk semua non-WALI). Klien yang punya akun tertaut ke ustadz menyembunyikan barisnya sendiri (kecuali ADMIN/TU), sesuai aturan self-attendance.
 - `tren`: hingga 14 **hari belajar** terakhir sampai `tanggal` (urut naik). Hari belajar = tanggal yang punya ≥1 entri absensi santri; `tanggal` yang diminta ikut disertakan bila sudah punya entri. `tercatat` = jumlah entri (hadir + tidak hadir) hari itu. Kosong bila belum ada data.
 - `perhatian` (urut seperti tabel; item yang jumlahnya 0 tidak dikirim). `judul` dan `keterangan` dirakit server (Indonesia) agar teks web dan Android sama; `keterangan` memuat sampai 3 nama lalu "dan N lainnya". `aksi` ∈ `ABSENSI_SANTRI` | `ABSENSI_USTADZ` | `DAFTAR_SANTRI` (klien menyembunyikan tombol bila menu itu tidak ada untuk rolenya).
 

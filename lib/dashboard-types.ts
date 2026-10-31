@@ -26,6 +26,16 @@ export type DashboardSantri = KehadiranHitung & {
   perJilid: Record<JilidKode, number>;
 };
 
+export type DashboardUstadzItem = {
+  id: string;
+  nama: string;
+  mapelDiajar: string;
+  status: StatusHari;
+};
+
+/** Ringkasan ustadz hari ini + daftar per ustadz (urut nama). */
+export type DashboardUstadz = KehadiranHitung & { daftar: DashboardUstadzItem[] };
+
 export type TrenHari = { tanggal: string; hadir: number; tercatat: number };
 
 export type PerhatianKode =
@@ -54,7 +64,7 @@ export type Aktivitas = {
 
 export type DashboardRingkasan = {
   santri: DashboardSantri;
-  ustadz: KehadiranHitung;
+  ustadz: DashboardUstadz;
   tren: TrenHari[];
   perhatian: Perhatian[];
   aktivitas: Aktivitas[];
