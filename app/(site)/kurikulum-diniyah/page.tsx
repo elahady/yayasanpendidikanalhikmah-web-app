@@ -116,8 +116,11 @@ export default function KurikulumDiniyahPage() {
       </Section>
 
       <Section title="Jadwal">
+        <p>
+          Belajar <strong className="text-ink">Senin–Jumat</strong>; Sabtu dan Minggu libur.
+        </p>
         <Callout variant="placeholder">
-          <p>Jadwal belajar akan diumumkan di sini setelah data final.</p>
+          <p>Jam belajar akan diumumkan di sini setelah data final.</p>
         </Callout>
       </Section>
 
